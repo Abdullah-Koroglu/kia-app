@@ -3,16 +3,27 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { api } from "@/lib/client";
-import type {
-  Dictionaries,
-  Person,
-  RelationView,
-} from "@/lib/types";
+import type { Dictionaries, Person, RelationView } from "@/lib/types";
 import { PersonFormDialog } from "./person-form-dialog";
 import { PersonPicker } from "./person-picker";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogHeader } from "./ui/dialog";
-import { FieldError, Label, Select, Textarea } from "./ui/field";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
+import { Label } from "./ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { Textarea } from "./ui/textarea";
 
 export function RelationDialog({
   open,
@@ -91,7 +102,9 @@ export function RelationDialog({
       onSaved();
       onOpenChange(false);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "İlişki kaydedilemedi.");
+      setError(
+        caught instanceof Error ? caught.message : "İlişki kaydedilemedi.",
+      );
     } finally {
       setBusy(false);
     }
@@ -102,16 +115,18 @@ export function RelationDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <DialogHeader
-            title={
+        <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
               relation ? `${roleLabel} ilişkisini düzenle` : `${roleLabel} ekle`
-            }
-            description={`${currentPerson.name} için aktarım ilişkisini kaydedin.`}
-          />
+            </DialogTitle>
+            <DialogDescription>
+              {currentPerson.name} için aktarım ilişkisini kaydedin.
+            </DialogDescription>
+          </DialogHeader>
           <form onSubmit={submit}>
             <div className="space-y-4">
-              <div>
+              <div className="grid gap-2">
                 <Label>{roleLabel}</Label>
                 <PersonPicker
                   value={counterpart}
@@ -161,7 +176,7 @@ export function RelationDialog({
                   items={dictionaries.places}
                 />
               </div>
-              <div>
+              <div className="grid gap-2">
                 <Label htmlFor="relationNote">Detay notu</Label>
                 <Textarea
                   id="relationNote"
@@ -170,8 +185,10 @@ export function RelationDialog({
                 />
               </div>
             </div>
-            <FieldError>{error}</FieldError>
-            <div className="mt-6 flex justify-end gap-2">
+            {error ? (
+              <p className="mt-4 text-sm text-destructive">{error}</p>
+            ) : null}
+            <DialogFooter className="mt-6">
               <Button
                 type="button"
                 variant="outline"
@@ -183,7 +200,7 @@ export function RelationDialog({
               <Button type="submit" disabled={busy}>
                 {busy ? "Kaydediliyor…" : "Kaydet"}
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -213,21 +230,25 @@ function DictionaryField({
   required?: boolean;
 }) {
   return (
-    <div>
+    <div className="grid gap-2">
       <Label>{label}</Label>
       <Select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
+        value={value || (required ? undefined : "none")}
+        onValueChange={(next) => onChange(next === "none" ? "" : next)}
         required={required}
       >
-        <option value="">{required ? "Seçin" : "Bilinmiyor"}</option>
-        {items.map((item) => (
-          <option value={item.id} key={item.id}>
-            {item.name}
-          </option>
-        ))}
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder={required ? "Seçin" : "Bilinmiyor"} />
+        </SelectTrigger>
+        <SelectContent>
+          {!required ? <SelectItem value="none">Bilinmiyor</SelectItem> : null}
+          {items.map((item) => (
+            <SelectItem value={String(item.id)} key={item.id}>
+              {item.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
       </Select>
     </div>
   );
 }
-

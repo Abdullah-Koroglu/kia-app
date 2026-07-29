@@ -11,4 +11,3 @@ export function yearLabel(hijri: number | null, gregorian: number | null) {
     .filter(Boolean)
     .join(" / ");
 }
-

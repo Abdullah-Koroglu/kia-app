@@ -20,26 +20,26 @@ export function AppHeader({ username }: { username: string }) {
   }
 
   return (
-    <header className="border-b border-stone-200 bg-white/90 backdrop-blur">
+    <header className="border-b bg-background">
       <div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-8">
           <Link href="/persons" className="flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-900 font-serif text-lg font-bold text-white">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-lg font-semibold text-primary-foreground">
               ق
             </span>
-            <span className="font-serif text-lg font-semibold text-stone-950">
+            <span className="font-heading text-lg font-semibold">
               Kıraat Ağı
             </span>
           </Link>
           <Link
             href="/persons"
-            className="hidden text-sm font-medium text-stone-600 hover:text-emerald-800 sm:block"
+            className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:block"
           >
             Kişiler
           </Link>
         </div>
         <div className="flex items-center gap-3">
-          <span className="hidden text-sm text-stone-500 sm:inline">
+          <span className="hidden text-sm text-muted-foreground sm:inline">
             {username}
           </span>
           <Button
@@ -56,4 +56,3 @@ export function AppHeader({ username }: { username: string }) {
     </header>
   );
 }
-

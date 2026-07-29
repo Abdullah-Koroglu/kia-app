@@ -17,9 +17,20 @@ import type { Person, PersonPageResult } from "@/lib/types";
 import { yearLabel } from "@/lib/utils";
 import { PersonFormDialog } from "./person-form-dialog";
 import { PersonPicker } from "./person-picker";
+import { Alert, AlertDescription } from "./ui/alert";
 import { Button } from "./ui/button";
+import { Card, CardContent, CardFooter } from "./ui/card";
 import { ConfirmDialog } from "./ui/confirm-dialog";
-import { Input, Label } from "./ui/field";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/table";
 
 export function PersonsClient() {
   const [data, setData] = useState<PersonPageResult>({
@@ -105,9 +116,10 @@ export function PersonsClient() {
     <>
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="eyebrow">Araştırma kayıtları</p>
-          <h1 className="page-title">Kişiler</h1>
-          <p className="mt-2 text-sm text-stone-600">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">
+            Kişiler
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {data.total.toLocaleString("tr-TR")} kişi kaydı
           </p>
         </div>
@@ -122,162 +134,166 @@ export function PersonsClient() {
         </Button>
       </div>
 
-      <section className="surface mb-5 p-4">
-        <div className="grid gap-4 lg:grid-cols-[minmax(260px,1.5fr)_1fr_1fr_130px_130px_auto] lg:items-end">
-          <div>
-            <Label htmlFor="personSearch">Arama</Label>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-3.5 size-4 text-stone-400" />
-              <Input
-                id="personSearch"
-                className="pl-9"
-                value={queryInput}
-                onChange={(event) => setQueryInput(event.target.value)}
-                placeholder="ID, isim veya isim açıklaması"
+      <Card className="mb-5">
+        <CardContent>
+          <div className="grid gap-4 lg:grid-cols-[minmax(260px,1.5fr)_1fr_1fr_130px_130px_auto] lg:items-end">
+            <div className="grid gap-2">
+              <Label htmlFor="personSearch">Arama</Label>
+              <div className="relative">
+                <Search className="pointer-events-none absolute top-2 left-2.5 size-4 text-muted-foreground" />
+                <Input
+                  id="personSearch"
+                  className="pl-9"
+                  value={queryInput}
+                  onChange={(event) => setQueryInput(event.target.value)}
+                  placeholder="ID, isim veya isim açıklaması"
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label>Hocaya göre</Label>
+              <PersonPicker
+                value={teacher}
+                onChange={(person) => {
+                  setTeacher(person);
+                  setPage(1);
+                }}
               />
             </div>
+            <div className="grid gap-2">
+              <Label>Talebeye göre</Label>
+              <PersonPicker
+                value={student}
+                onChange={(person) => {
+                  setStudent(person);
+                  setPage(1);
+                }}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="birthYear">Doğum yılı</Label>
+              <Input
+                id="birthYear"
+                type="number"
+                value={birthYear}
+                onChange={(event) => {
+                  setBirthYear(event.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="deathYear">Vefat yılı</Label>
+              <Input
+                id="deathYear"
+                type="number"
+                value={deathYear}
+                onChange={(event) => {
+                  setDeathYear(event.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
+            <Button
+              variant="ghost"
+              onClick={clearFilters}
+              disabled={!hasFilters}
+              title="Filtreleri temizle"
+            >
+              <X className="size-4" />
+              Temizle
+            </Button>
           </div>
-          <div>
-            <Label>Hocaya göre</Label>
-            <PersonPicker
-              value={teacher}
-              onChange={(person) => {
-                setTeacher(person);
-                setPage(1);
-              }}
-            />
-          </div>
-          <div>
-            <Label>Talebeye göre</Label>
-            <PersonPicker
-              value={student}
-              onChange={(person) => {
-                setStudent(person);
-                setPage(1);
-              }}
-            />
-          </div>
-          <div>
-            <Label htmlFor="birthYear">Doğum yılı</Label>
-            <Input
-              id="birthYear"
-              type="number"
-              value={birthYear}
-              onChange={(event) => {
-                setBirthYear(event.target.value);
-                setPage(1);
-              }}
-            />
-          </div>
-          <div>
-            <Label htmlFor="deathYear">Vefat yılı</Label>
-            <Input
-              id="deathYear"
-              type="number"
-              value={deathYear}
-              onChange={(event) => {
-                setDeathYear(event.target.value);
-                setPage(1);
-              }}
-            />
-          </div>
-          <Button
-            variant="ghost"
-            onClick={clearFilters}
-            disabled={!hasFilters}
-            title="Filtreleri temizle"
-          >
-            <X className="size-4" />
-            Temizle
-          </Button>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
       {message ? (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {message}
-        </div>
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
       ) : null}
 
-      <section className="surface overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="data-table min-w-[920px]">
-            <thead>
-              <tr>
-                <th>Dış Kaynak ID</th>
-                <th>İsim</th>
-                <th>İsim Açıklaması</th>
-                <th>Doğum</th>
-                <th>Vefat</th>
-                <th className="w-28 text-right">İşlemler</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((person) => (
-                <tr key={person.id}>
-                  <td className="font-mono text-xs text-emerald-900">
-                    #{person.extSourceId}
-                  </td>
-                  <td>
-                    <Link
-                      className="font-semibold text-stone-950 hover:text-emerald-800 hover:underline"
-                      href={`/persons/${person.id}`}
-                    >
-                      {person.name}
-                    </Link>
-                  </td>
-                  <td
-                    className="max-w-sm truncate text-stone-600"
-                    title={person.nameDescription ?? ""}
+      <Card className="gap-0 py-0">
+        <Table className="min-w-[920px]">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Dış Kaynak ID</TableHead>
+              <TableHead>İsim</TableHead>
+              <TableHead>İsim Açıklaması</TableHead>
+              <TableHead>Doğum</TableHead>
+              <TableHead>Vefat</TableHead>
+              <TableHead className="w-28 text-right">İşlemler</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.items.map((person) => (
+              <TableRow key={person.id}>
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  #{person.extSourceId}
+                </TableCell>
+                <TableCell>
+                  <Link
+                    className="font-medium hover:underline"
+                    href={`/persons/${person.id}`}
                   >
-                    {person.nameDescription || "—"}
-                  </td>
-                  <td>{yearLabel(person.birthYearHijri, person.birthYearGregorian)}</td>
-                  <td>{yearLabel(person.deathYearHijri, person.deathYearGregorian)}</td>
-                  <td>
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`${person.name} kişisini düzenle`}
-                        onClick={() => {
-                          setEditing(person);
-                          setFormOpen(true);
-                        }}
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`${person.name} kişisini sil`}
-                        onClick={() => setDeleting(person)}
-                      >
-                        <Trash2 className="size-4 text-red-700" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    {person.name}
+                  </Link>
+                </TableCell>
+                <TableCell
+                  className="max-w-sm truncate text-muted-foreground"
+                  title={person.nameDescription ?? ""}
+                >
+                  {person.nameDescription || "—"}
+                </TableCell>
+                <TableCell>
+                  {yearLabel(person.birthYearHijri, person.birthYearGregorian)}
+                </TableCell>
+                <TableCell>
+                  {yearLabel(person.deathYearHijri, person.deathYearGregorian)}
+                </TableCell>
+                <TableCell>
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`${person.name} kişisini düzenle`}
+                      onClick={() => {
+                        setEditing(person);
+                        setFormOpen(true);
+                      }}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`${person.name} kişisini sil`}
+                      onClick={() => setDeleting(person)}
+                    >
+                      <Trash2 className="text-destructive" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
         {loading ? (
-          <div className="p-12 text-center text-sm text-stone-500">
+          <div className="p-12 text-center text-sm text-muted-foreground">
             Kişiler yükleniyor…
           </div>
         ) : !data.items.length ? (
           <div className="p-12 text-center">
-            <Users className="mx-auto mb-3 size-8 text-stone-300" />
-            <p className="font-medium text-stone-700">
+            <Users className="mx-auto mb-3 size-8 text-muted-foreground/50" />
+            <p className="font-medium text-muted-foreground">
               {query || hasFilters
                 ? "Aramanızla eşleşen kişi bulunamadı."
                 : "Henüz kişi bulunmuyor."}
             </p>
           </div>
         ) : null}
-        <div className="flex items-center justify-between border-t border-stone-200 px-4 py-3">
-          <p className="text-sm text-stone-500">
+        <CardFooter className="justify-between">
+          <p className="text-sm text-muted-foreground">
             Sayfa {data.page} / {data.pageCount}
           </p>
           <div className="flex gap-2">
@@ -300,8 +316,8 @@ export function PersonsClient() {
               <ChevronRight className="size-4" />
             </Button>
           </div>
-        </div>
-      </section>
+        </CardFooter>
+      </Card>
 
       <PersonFormDialog
         open={formOpen}
@@ -324,4 +340,3 @@ export function PersonsClient() {
     </>
   );
 }
-

@@ -4,7 +4,8 @@ import { FormEvent, useState } from "react";
 import { LogIn } from "lucide-react";
 import { api } from "@/lib/client";
 import { Button } from "./ui/button";
-import { FieldError, Input, Label } from "./ui/field";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
 export function LoginForm({ returnTo }: { returnTo: string }) {
   const [username, setUsername] = useState("");
@@ -33,8 +34,8 @@ export function LoginForm({ returnTo }: { returnTo: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="mt-8 space-y-5">
-      <div>
+    <form onSubmit={submit} className="space-y-4">
+      <div className="grid gap-2">
         <Label htmlFor="username">Kullanıcı adı</Label>
         <Input
           id="username"
@@ -45,7 +46,7 @@ export function LoginForm({ returnTo }: { returnTo: string }) {
           onChange={(event) => setUsername(event.target.value)}
         />
       </div>
-      <div>
+      <div className="grid gap-2">
         <Label htmlFor="password">Şifre</Label>
         <Input
           id="password"
@@ -56,12 +57,11 @@ export function LoginForm({ returnTo }: { returnTo: string }) {
           onChange={(event) => setPassword(event.target.value)}
         />
       </div>
-      <FieldError>{error}</FieldError>
-      <Button className="w-full" type="submit" disabled={busy}>
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      <Button className="w-full" size="lg" type="submit" disabled={busy}>
         <LogIn className="size-4" />
         {busy ? "Giriş yapılıyor…" : "Giriş Yap"}
       </Button>
     </form>
   );
 }
-

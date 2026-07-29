@@ -4,8 +4,17 @@ import { FormEvent, useEffect, useState } from "react";
 import { api } from "@/lib/client";
 import type { Person } from "@/lib/types";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogHeader } from "./ui/dialog";
-import { FieldError, Input, Label, Textarea } from "./ui/field";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
 
 type PersonDraft = {
   extSourceId: string;
@@ -106,14 +115,16 @@ export function PersonFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader
-          title={person ? "Kişiyi düzenle" : "Yeni kişi"}
-          description="Araştırma kaynağındaki temel kişi bilgilerini girin."
-        />
+      <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{person ? "Kişiyi düzenle" : "Yeni kişi"}</DialogTitle>
+          <DialogDescription>
+            Araştırma kaynağındaki temel kişi bilgilerini girin.
+          </DialogDescription>
+        </DialogHeader>
         <form onSubmit={submit}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
+            <div className="grid gap-2">
               <Label htmlFor="extSourceId">Dış kaynak ID</Label>
               <Input
                 id="extSourceId"
@@ -124,7 +135,7 @@ export function PersonFormDialog({
                 onChange={(event) => set("extSourceId", event.target.value)}
               />
             </div>
-            <div>
+            <div className="grid gap-2">
               <Label htmlFor="name">Kısa isim</Label>
               <Input
                 id="name"
@@ -134,7 +145,7 @@ export function PersonFormDialog({
                 onChange={(event) => set("name", event.target.value)}
               />
             </div>
-            <div className="sm:col-span-2">
+            <div className="grid gap-2 sm:col-span-2">
               <Label htmlFor="nameDescription">İsim açıklaması</Label>
               <Input
                 id="nameDescription"
@@ -167,7 +178,7 @@ export function PersonFormDialog({
               value={draft.deathYearGregorian}
               onChange={(value) => set("deathYearGregorian", value)}
             />
-            <div className="sm:col-span-2">
+            <div className="grid gap-2 sm:col-span-2">
               <Label htmlFor="detailNote">Detay notu</Label>
               <Textarea
                 id="detailNote"
@@ -176,8 +187,10 @@ export function PersonFormDialog({
               />
             </div>
           </div>
-          <FieldError>{error}</FieldError>
-          <div className="mt-6 flex justify-end gap-2">
+          {error ? (
+            <p className="mt-4 text-sm text-destructive">{error}</p>
+          ) : null}
+          <DialogFooter className="mt-6">
             <Button
               type="button"
               variant="outline"
@@ -189,7 +202,7 @@ export function PersonFormDialog({
             <Button type="submit" disabled={busy}>
               {busy ? "Kaydediliyor…" : "Kaydet"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
@@ -208,7 +221,7 @@ function YearField({
   onChange: (value: string) => void;
 }) {
   return (
-    <div>
+    <div className="grid gap-2">
       <Label htmlFor={id}>{label}</Label>
       <Input
         id={id}
@@ -220,4 +233,3 @@ function YearField({
     </div>
   );
 }
-

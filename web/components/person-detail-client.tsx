@@ -12,17 +12,39 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/client";
-import type {
-  Dictionaries,
-  Person,
-  RelationView,
-} from "@/lib/types";
+import type { Dictionaries, Person, RelationView } from "@/lib/types";
 import { yearLabel } from "@/lib/utils";
 import { PersonFormDialog } from "./person-form-dialog";
 import { RelationDialog } from "./relation-dialog";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { ConfirmDialog } from "./ui/confirm-dialog";
-import { Label, Select } from "./ui/field";
+import { Label } from "./ui/label";
+import { Separator } from "./ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/table";
 
 type DetailResponse = {
   person: Person;
@@ -61,8 +83,9 @@ export function PersonDetailClient({ personId }: { personId: string }) {
   const [editingRelation, setEditingRelation] = useState<RelationView | null>(
     null,
   );
-  const [deletingRelation, setDeletingRelation] =
-    useState<RelationView | null>(null);
+  const [deletingRelation, setDeletingRelation] = useState<RelationView | null>(
+    null,
+  );
   const [deleteBusy, setDeleteBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -122,26 +145,29 @@ export function PersonDetailClient({ personId }: { personId: string }) {
 
   if (!detail) {
     return (
-      <div className="surface p-12 text-center text-sm text-stone-600">
-        {loading ? "Kişi bilgileri yükleniyor…" : message || "Kişi bulunamadı."}
-      </div>
+      <Card>
+        <CardContent className="p-12 text-center text-sm text-muted-foreground">
+          {loading
+            ? "Kişi bilgileri yükleniyor…"
+            : message || "Kişi bulunamadı."}
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <>
-      <Link
-        href="/persons"
-        className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-stone-600 hover:text-emerald-800"
-      >
-        <ArrowLeft className="size-4" />
-        Kişilere dön
-      </Link>
+      <Button asChild variant="ghost" className="mb-5">
+        <Link href="/persons">
+          <ArrowLeft />
+          Kişilere dön
+        </Link>
+      </Button>
 
       {message ? (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {message}
-        </div>
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
       ) : null}
 
       <RelationSection
@@ -157,28 +183,28 @@ export function PersonDetailClient({ personId }: { personId: string }) {
         loading={loading}
       />
 
-      <section className="person-focus my-6">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex gap-4">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-emerald-900 text-white">
-              <UserRound className="size-6" />
+      <Card className="my-6">
+        <CardHeader>
+          <div className="flex items-start gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+              <UserRound className="size-5" />
             </div>
-            <div>
-              <p className="eyebrow">Kişi bilgileri</p>
-              <h1 className="font-serif text-3xl font-semibold tracking-tight text-stone-950">
-                {detail.person.name}
-              </h1>
-              <p className="mt-1 font-mono text-xs text-emerald-800">
+            <div className="grid gap-1">
+              <CardTitle className="text-lg">{detail.person.name}</CardTitle>
+              <CardDescription className="font-mono text-xs">
                 Dış kaynak #{detail.person.extSourceId}
-              </p>
+              </CardDescription>
             </div>
           </div>
-          <Button variant="outline" onClick={() => setPersonFormOpen(true)}>
-            <Pencil className="size-4" />
-            Kişiyi Düzenle
-          </Button>
-        </div>
-        <div className="mt-6 grid gap-5 border-t border-stone-200 pt-5 md:grid-cols-3">
+          <CardAction>
+            <Button variant="outline" onClick={() => setPersonFormOpen(true)}>
+              <Pencil />
+              Kişiyi Düzenle
+            </Button>
+          </CardAction>
+        </CardHeader>
+        <Separator />
+        <CardContent className="grid gap-5 md:grid-cols-3">
           <Info label="İsim açıklaması" value={detail.person.nameDescription} />
           <Info
             label="Doğum"
@@ -197,8 +223,8 @@ export function PersonDetailClient({ personId }: { personId: string }) {
           <div className="md:col-span-3">
             <Info label="Detay notu" value={detail.person.detailNote} />
           </div>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
       <RelationSection
         title="Talebeleri"
@@ -269,13 +295,11 @@ function RelationSection({
 }) {
   const hasFilters = Object.values(filters).some(Boolean);
   return (
-    <section className="surface overflow-hidden">
-      <div className="flex flex-col gap-4 border-b border-stone-200 p-4 lg:flex-row lg:items-end lg:justify-between">
+    <Card className="gap-0 py-0">
+      <CardHeader className="flex flex-col gap-4 border-b py-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="eyebrow">Aktarım ilişkileri</p>
-          <h2 className="font-serif text-2xl font-semibold text-stone-950">
-            {title}
-          </h2>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>Aktarım ilişkileri</CardDescription>
         </div>
         <div className="flex flex-wrap items-end gap-2">
           <MiniFilter
@@ -317,83 +341,83 @@ function RelationSection({
             {title === "Hocaları" ? "Hoca Ekle" : "Talebe Ekle"}
           </Button>
         </div>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="data-table min-w-[900px]">
-          <thead>
-            <tr>
-              <th>Dış Kaynak ID</th>
-              <th>{title === "Hocaları" ? "Hoca" : "Talebe"}</th>
-              <th>Yöntem</th>
-              <th>Kapsam</th>
-              <th>Kesinlik</th>
-              <th>Mekân</th>
-              <th>Not</th>
-              <th className="w-24 text-right">İşlemler</th>
-            </tr>
-          </thead>
-          <tbody>
-            {relations.map((relation) => (
-              <tr key={relation.id}>
-                <td className="font-mono text-xs text-emerald-900">
-                  #{relation.counterpartExtSourceId}
-                </td>
-                <td>
-                  <Link
-                    className="font-semibold text-stone-950 hover:text-emerald-800 hover:underline"
-                    href={`/persons/${relation.counterpartId}`}
-                  >
-                    {relation.counterpartName}
-                  </Link>
-                </td>
-                <td>{relation.methodName}</td>
-                <td>{relation.scopeName}</td>
-                <td>
-                  <span className="badge">{relation.certaintyName}</span>
-                </td>
-                <td>{relation.placeName || "—"}</td>
-                <td
-                  className="max-w-48 truncate text-stone-600"
-                  title={relation.detailNote ?? ""}
+      </CardHeader>
+      <Table className="min-w-[900px]">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Dış Kaynak ID</TableHead>
+            <TableHead>{title === "Hocaları" ? "Hoca" : "Talebe"}</TableHead>
+            <TableHead>Yöntem</TableHead>
+            <TableHead>Kapsam</TableHead>
+            <TableHead>Kesinlik</TableHead>
+            <TableHead>Mekân</TableHead>
+            <TableHead>Not</TableHead>
+            <TableHead className="w-24 text-right">İşlemler</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {relations.map((relation) => (
+            <TableRow key={relation.id}>
+              <TableCell className="font-mono text-xs text-muted-foreground">
+                #{relation.counterpartExtSourceId}
+              </TableCell>
+              <TableCell>
+                <Link
+                  className="font-medium hover:underline"
+                  href={`/persons/${relation.counterpartId}`}
                 >
-                  {relation.detailNote || "—"}
-                </td>
-                <td>
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(relation)}
-                      aria-label="İlişkiyi düzenle"
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(relation)}
-                      aria-label="İlişkiyi sil"
-                    >
-                      <Trash2 className="size-4 text-red-700" />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                  {relation.counterpartName}
+                </Link>
+              </TableCell>
+              <TableCell>{relation.methodName}</TableCell>
+              <TableCell>{relation.scopeName}</TableCell>
+              <TableCell>
+                <Badge variant="secondary">{relation.certaintyName}</Badge>
+              </TableCell>
+              <TableCell>{relation.placeName || "—"}</TableCell>
+              <TableCell
+                className="max-w-48 truncate text-muted-foreground"
+                title={relation.detailNote ?? ""}
+              >
+                {relation.detailNote || "—"}
+              </TableCell>
+              <TableCell>
+                <div className="flex justify-end gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(relation)}
+                    aria-label="İlişkiyi düzenle"
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDelete(relation)}
+                    aria-label="İlişkiyi sil"
+                  >
+                    <Trash2 className="text-destructive" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
       {loading ? (
-        <div className="p-8 text-center text-sm text-stone-500">
+        <div className="p-8 text-center text-sm text-muted-foreground">
           İlişkiler yükleniyor…
         </div>
       ) : !relations.length ? (
         <div className="p-10 text-center">
-          <BookOpen className="mx-auto mb-3 size-7 text-stone-300" />
-          <p className="text-sm font-medium text-stone-600">{emptyText}</p>
+          <BookOpen className="mx-auto mb-3 size-7 text-muted-foreground/50" />
+          <p className="text-sm font-medium text-muted-foreground">
+            {emptyText}
+          </p>
         </div>
       ) : null}
-    </section>
+    </Card>
   );
 }
 
@@ -409,40 +433,35 @@ function MiniFilter({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="w-32">
+    <div className="grid w-32 gap-2">
       <Label className="text-xs">{label}</Label>
       <Select
-        className="h-9 text-xs"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
+        value={value || "all"}
+        onValueChange={(next) => onChange(next === "all" ? "" : next)}
       >
-        <option value="">Tümü</option>
-        {items.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.name}
-          </option>
-        ))}
+        <SelectTrigger size="sm" className="w-full">
+          <SelectValue placeholder="Tümü" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tümü</SelectItem>
+          {items.map((item) => (
+            <SelectItem key={item.id} value={String(item.id)}>
+              {item.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
       </Select>
     </div>
   );
 }
 
-function Info({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | null;
-}) {
+function Info({ label, value }: { label: string; value?: string | null }) {
   return (
     <div>
-      <dt className="text-xs font-semibold uppercase tracking-wider text-stone-500">
-        {label}
-      </dt>
-      <dd className="mt-1 whitespace-pre-wrap text-sm leading-6 text-stone-800">
+      <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+      <dd className="mt-1 whitespace-pre-wrap text-sm leading-6">
         {value || "—"}
       </dd>
     </div>
   );
 }
-

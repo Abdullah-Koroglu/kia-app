@@ -2,6 +2,13 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { LoginForm } from "@/components/login-form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Giriş" };
 export const dynamic = "force-dynamic";
@@ -16,28 +23,31 @@ export default async function LoginPage({
   const params = await searchParams;
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-12">
+    <main className="flex min-h-svh items-center justify-center bg-muted/30 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-900 font-serif text-3xl font-bold text-white shadow-lg">
+          <span className="mx-auto flex size-12 items-center justify-center rounded-xl bg-primary text-2xl font-semibold text-primary-foreground">
             ق
           </span>
-          <h1 className="mt-5 font-serif text-4xl font-semibold tracking-tight text-stone-950">
+          <h1 className="mt-4 font-heading text-2xl font-semibold tracking-tight">
             Kıraat Ağı
           </h1>
-          <p className="mt-2 text-sm leading-6 text-stone-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Hoca-talebe ilişkileri araştırma çalışma alanı
           </p>
         </div>
-        <section className="surface p-7 sm:p-8">
-          <p className="eyebrow">Güvenli çalışma alanı</p>
-          <h2 className="font-serif text-2xl font-semibold text-stone-950">
-            Hesabınıza giriş yapın
-          </h2>
-          <LoginForm returnTo={params.returnTo ?? "/persons"} />
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Hesabınıza giriş yapın</CardTitle>
+            <CardDescription>
+              Devam etmek için kullanıcı bilgilerinizi girin.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LoginForm returnTo={params.returnTo ?? "/persons"} />
+          </CardContent>
+        </Card>
       </div>
     </main>
   );
 }
-
