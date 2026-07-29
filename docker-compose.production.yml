@@ -8,6 +8,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      HOSTNAME: 0.0.0.0
       DATABASE_URL: ${QIRAAT_DATABASE_URL}
       APP_URL: https://app.kiraatilmiatlasi.com
       TRUST_PROXY: "true"
@@ -60,4 +61,3 @@ networks:
   shared_postgres:
     external: true
     name: workout-tracker_default
-
