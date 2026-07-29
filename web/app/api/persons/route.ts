@@ -1,0 +1,151 @@
+import { sql } from "@/db";
+import { requireApiUser } from "@/lib/api-auth";
+import { writeAudit } from "@/lib/audit";
+import { requestContext } from "@/lib/request-context";
+import { normalizeSearchText } from "@/lib/search";
+import { apiError, personInputSchema } from "@/lib/validation";
+
+const PAGE_SIZE = 50;
+
+export async function GET(request: Request) {
+  const auth = await requireApiUser();
+  if (auth.response) return auth.response;
+
+  const params = new URL(request.url).searchParams;
+  const q = params.get("q")?.trim() ?? "";
+  const normalizedQuery = normalizeSearchText(q);
+  const teacherId = params.get("teacherId");
+  const studentId = params.get("studentId");
+  const birthYear = Number(params.get("birthYear")) || null;
+  const deathYear = Number(params.get("deathYear")) || null;
+  const compact = params.get("compact") === "true";
+  const requestedPage = Math.max(1, Number(params.get("page")) || 1);
+  const pageSize = compact ? 20 : PAGE_SIZE;
+  const offset = (requestedPage - 1) * pageSize;
+  const numericQuery = /^-?\d+$/.test(q) ? Number(q) : null;
+
+  const searchCondition = q
+    ? sql`
+        and (
+          ${numericQuery !== null ? sql`p.ext_source_id = ${numericQuery} or` : sql``}
+          translate(unaccent(lower(p.name)), 'ı', 'i') like '%' || ${normalizedQuery} || '%'
+          or translate(unaccent(lower(coalesce(p.name_description, ''))), 'ı', 'i') like '%' || ${normalizedQuery} || '%'
+          or similarity(translate(unaccent(lower(p.name)), 'ı', 'i'), ${normalizedQuery}) >= 0.2
+          or similarity(translate(unaccent(lower(coalesce(p.name_description, ''))), 'ı', 'i'), ${normalizedQuery}) >= 0.2
+        )
+      `
+    : sql``;
+  const exactOrder =
+    numericQuery !== null
+      ? sql`case when p.ext_source_id = ${numericQuery} then 0 else 1 end`
+      : sql`1`;
+  const teacherCondition = teacherId
+    ? sql`and exists (
+        select 1 from relations r
+        where r.teacher_id = ${teacherId} and r.student_id = p.id
+      )`
+    : sql``;
+  const studentCondition = studentId
+    ? sql`and exists (
+        select 1 from relations r
+        where r.student_id = ${studentId} and r.teacher_id = p.id
+      )`
+    : sql``;
+  const birthCondition = birthYear
+    ? sql`and (p.birth_year_hijri = ${birthYear} or p.birth_year_gregorian = ${birthYear})`
+    : sql``;
+  const deathCondition = deathYear
+    ? sql`and (p.death_year_hijri = ${deathYear} or p.death_year_gregorian = ${deathYear})`
+    : sql``;
+
+  const where = sql`
+    where true
+    ${searchCondition}
+    ${teacherCondition}
+    ${studentCondition}
+    ${birthCondition}
+    ${deathCondition}
+  `;
+
+  const [items, countRows] = await Promise.all([
+    sql`
+      select
+        p.id,
+        p.ext_source_id as "extSourceId",
+        p.name,
+        p.name_description as "nameDescription",
+        p.birth_year_hijri as "birthYearHijri",
+        p.birth_year_gregorian as "birthYearGregorian",
+        p.death_year_hijri as "deathYearHijri",
+        p.death_year_gregorian as "deathYearGregorian",
+        p.detail_note as "detailNote"
+      from persons p
+      ${where}
+      order by
+        ${exactOrder},
+        case when ${q} <> '' then greatest(
+          similarity(translate(unaccent(lower(p.name)), 'ı', 'i'), ${normalizedQuery}),
+          similarity(translate(unaccent(lower(coalesce(p.name_description, ''))), 'ı', 'i'), ${normalizedQuery})
+        ) else 0 end desc,
+        p.ext_source_id asc
+      limit ${pageSize} offset ${offset}
+    `,
+    sql<{ count: number }[]>`
+      select count(*)::int as count from persons p ${where}
+    `,
+  ]);
+
+  const total = countRows[0]?.count ?? 0;
+  return Response.json({
+    items,
+    total,
+    page: requestedPage,
+    pageSize,
+    pageCount: Math.max(1, Math.ceil(total / pageSize)),
+  });
+}
+
+export async function POST(request: Request) {
+  const auth = await requireApiUser();
+  if (auth.response || !auth.user) return auth.response;
+
+  try {
+    const input = personInputSchema.parse(await request.json());
+    const context = requestContext(request);
+    const person = await sql.begin(async (transaction) => {
+      const rows = await transaction`
+        insert into persons (
+          ext_source_id, name, name_description,
+          birth_year_hijri, birth_year_gregorian,
+          death_year_hijri, death_year_gregorian, detail_note
+        ) values (
+          ${input.extSourceId}, ${input.name}, ${input.nameDescription},
+          ${input.birthYearHijri}, ${input.birthYearGregorian},
+          ${input.deathYearHijri}, ${input.deathYearGregorian}, ${input.detailNote}
+        )
+        returning
+          id, ext_source_id as "extSourceId", name,
+          name_description as "nameDescription",
+          birth_year_hijri as "birthYearHijri",
+          birth_year_gregorian as "birthYearGregorian",
+          death_year_hijri as "deathYearHijri",
+          death_year_gregorian as "deathYearGregorian",
+          detail_note as "detailNote"
+      `;
+      const created = rows[0] as Record<string, unknown>;
+      await writeAudit(transaction as unknown as typeof sql, {
+        actor: auth.user,
+        action: "CREATE",
+        entityType: "Person",
+        entityId: String(created.id),
+        after: created,
+        context,
+      });
+      return created;
+    });
+
+    return Response.json(person, { status: 201 });
+  } catch (error) {
+    return apiError(error);
+  }
+}

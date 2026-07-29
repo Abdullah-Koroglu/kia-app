@@ -1,0 +1,233 @@
+"use client";
+
+import { FormEvent, useEffect, useState } from "react";
+import { Plus } from "lucide-react";
+import { api } from "@/lib/client";
+import type {
+  Dictionaries,
+  Person,
+  RelationView,
+} from "@/lib/types";
+import { PersonFormDialog } from "./person-form-dialog";
+import { PersonPicker } from "./person-picker";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogHeader } from "./ui/dialog";
+import { FieldError, Label, Select, Textarea } from "./ui/field";
+
+export function RelationDialog({
+  open,
+  onOpenChange,
+  currentPerson,
+  direction,
+  dictionaries,
+  relation,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentPerson: Person;
+  direction: "teacher" | "student";
+  dictionaries: Dictionaries;
+  relation?: RelationView | null;
+  onSaved: () => void;
+}) {
+  const [counterpart, setCounterpart] = useState<Person | null>(null);
+  const [methodId, setMethodId] = useState("");
+  const [scopeId, setScopeId] = useState("");
+  const [certaintyId, setCertaintyId] = useState("");
+  const [placeId, setPlaceId] = useState("");
+  const [detailNote, setDetailNote] = useState("");
+  const [quickPersonOpen, setQuickPersonOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setCounterpart(
+      relation
+        ? {
+            id: relation.counterpartId,
+            extSourceId: relation.counterpartExtSourceId,
+            name: relation.counterpartName,
+            nameDescription: relation.counterpartDescription,
+            birthYearHijri: null,
+            birthYearGregorian: null,
+            deathYearHijri: null,
+            deathYearGregorian: null,
+            detailNote: null,
+          }
+        : null,
+    );
+    setMethodId(relation?.methodId.toString() ?? "");
+    setScopeId(relation?.scopeId.toString() ?? "");
+    setCertaintyId(relation?.certaintyId.toString() ?? "");
+    setPlaceId(relation?.placeId?.toString() ?? "");
+    setDetailNote(relation?.detailNote ?? "");
+    setError("");
+  }, [open, relation]);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!counterpart) {
+      setError(`${direction === "teacher" ? "Hoca" : "Talebe"} seçin.`);
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const payload = {
+        teacherId: direction === "teacher" ? counterpart.id : currentPerson.id,
+        studentId: direction === "student" ? counterpart.id : currentPerson.id,
+        methodId: Number(methodId),
+        scopeId: Number(scopeId),
+        certaintyId: Number(certaintyId),
+        placeId: placeId ? Number(placeId) : null,
+        detailNote: detailNote || null,
+      };
+      await api(relation ? `/api/relations/${relation.id}` : "/api/relations", {
+        method: relation ? "PATCH" : "POST",
+        body: JSON.stringify(payload),
+      });
+      onSaved();
+      onOpenChange(false);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "İlişki kaydedilemedi.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const roleLabel = direction === "teacher" ? "Hoca" : "Talebe";
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader
+            title={
+              relation ? `${roleLabel} ilişkisini düzenle` : `${roleLabel} ekle`
+            }
+            description={`${currentPerson.name} için aktarım ilişkisini kaydedin.`}
+          />
+          <form onSubmit={submit}>
+            <div className="space-y-4">
+              <div>
+                <Label>{roleLabel}</Label>
+                <PersonPicker
+                  value={counterpart}
+                  onChange={setCounterpart}
+                  excludeId={currentPerson.id}
+                  placeholder={`${roleLabel} olacak kişiyi ara`}
+                />
+                {!relation ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => setQuickPersonOpen(true)}
+                  >
+                    <Plus className="size-4" />
+                    Aradığınız kişi yoksa yeni kişi oluşturun
+                  </Button>
+                ) : null}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <DictionaryField
+                  label="Yöntem"
+                  value={methodId}
+                  onChange={setMethodId}
+                  items={dictionaries.methods}
+                  required
+                />
+                <DictionaryField
+                  label="Kapsam"
+                  value={scopeId}
+                  onChange={setScopeId}
+                  items={dictionaries.scopes}
+                  required
+                />
+                <DictionaryField
+                  label="Kesinlik"
+                  value={certaintyId}
+                  onChange={setCertaintyId}
+                  items={dictionaries.certainties}
+                  required
+                />
+                <DictionaryField
+                  label="Mekân"
+                  value={placeId}
+                  onChange={setPlaceId}
+                  items={dictionaries.places}
+                />
+              </div>
+              <div>
+                <Label htmlFor="relationNote">Detay notu</Label>
+                <Textarea
+                  id="relationNote"
+                  value={detailNote}
+                  onChange={(event) => setDetailNote(event.target.value)}
+                />
+              </div>
+            </div>
+            <FieldError>{error}</FieldError>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={busy}
+              >
+                İptal
+              </Button>
+              <Button type="submit" disabled={busy}>
+                {busy ? "Kaydediliyor…" : "Kaydet"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <PersonFormDialog
+        open={quickPersonOpen}
+        onOpenChange={setQuickPersonOpen}
+        onSaved={(person) => {
+          setCounterpart(person);
+          setQuickPersonOpen(false);
+        }}
+      />
+    </>
+  );
+}
+
+function DictionaryField({
+  label,
+  value,
+  onChange,
+  items,
+  required,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  items: { id: number; name: string }[];
+  required?: boolean;
+}) {
+  return (
+    <div>
+      <Label>{label}</Label>
+      <Select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        required={required}
+      >
+        <option value="">{required ? "Seçin" : "Bilinmiyor"}</option>
+        {items.map((item) => (
+          <option value={item.id} key={item.id}>
+            {item.name}
+          </option>
+        ))}
+      </Select>
+    </div>
+  );
+}
+

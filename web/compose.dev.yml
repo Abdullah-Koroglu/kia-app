@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: qiraat_atlas
+      POSTGRES_USER: qiraat_app
+      POSTGRES_PASSWORD: qiraat_app
+    ports:
+      - "54329:5432"
+    volumes:
+      - qiraat_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qiraat_app -d qiraat_atlas"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  qiraat_postgres_data:
+

@@ -1,0 +1,31 @@
+services:
+  qiraat-app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${QIRAAT_DATABASE_URL}
+      TRUST_PROXY: "true"
+    networks:
+      - shared_app_network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1:3000/api/health",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+networks:
+  shared_app_network:
+    external: true
+    name: ${SHARED_DOCKER_NETWORK}
+
