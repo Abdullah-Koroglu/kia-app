@@ -1,0 +1,63 @@
+services:
+  app:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      target: runner
+    container_name: kia-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${QIRAAT_DATABASE_URL}
+      APP_URL: https://app.kiraatilmiatlasi.com
+      TRUST_PROXY: "true"
+    ports:
+      - "127.0.0.1:${QIRAAT_APP_PORT:-3018}:3000"
+    networks:
+      - shared_postgres
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1:3000/api/health",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  migrate:
+    profiles: ["tools"]
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      target: builder
+    environment:
+      DATABASE_URL: ${QIRAAT_DATABASE_URL}
+    command: npm run db:migrate
+    networks:
+      - shared_postgres
+
+  seed:
+    profiles: ["tools"]
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      target: builder
+    environment:
+      DATABASE_URL: ${QIRAAT_DATABASE_URL}
+      SEED_USERNAME: ${SEED_USERNAME}
+      SEED_PASSWORD: ${SEED_PASSWORD}
+    command: npm run db:seed
+    networks:
+      - shared_postgres
+
+networks:
+  shared_postgres:
+    external: true
+    name: workout-tracker_default
+
