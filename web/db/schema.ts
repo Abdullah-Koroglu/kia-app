@@ -332,6 +332,11 @@ export const persons = pgTable(
     uniqueIndex("persons_ext_source_id_uq").on(table.extSourceId),
     index("persons_name_idx").on(table.name),
     index("persons_homeland_id_idx").on(table.homelandId),
+    index("persons_review_status_idx").on(table.reviewStatus),
+    index("persons_approved_version_idx").on(
+      table.approvedVersion,
+      table.contentVersion,
+    ),
     index("persons_created_under_assignment_idx").on(
       table.createdUnderAssignmentId,
     ),

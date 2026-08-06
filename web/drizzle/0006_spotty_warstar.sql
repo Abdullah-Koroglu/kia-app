@@ -1,0 +1,2 @@
+CREATE INDEX "persons_review_status_idx" ON "persons" USING btree ("review_status");--> statement-breakpoint
+CREATE INDEX "persons_approved_version_idx" ON "persons" USING btree ("approved_version","content_version");

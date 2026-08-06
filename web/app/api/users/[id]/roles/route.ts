@@ -29,8 +29,23 @@ export async function PUT(request: Request, route: RouteContext) {
       );
     }
     await sql.begin(async (transaction) => {
+      await transaction`select pg_advisory_xact_lock(7241904)`;
       const userRows = await transaction`select id from users where id = ${id} for update`;
       if (!userRows[0]) throw new Error("Kullanıcı bulunamadı.");
+      if (removesManager) {
+        const others = await transaction<{ count: number }[]>`
+          select count(distinct u.id)::int as count from users u
+          join user_roles ur on ur.user_id = u.id
+          join roles r on r.id = ur.role_id
+          where u.is_active and u.id <> ${id}
+            and r.code = ${ROLE_CODES.MANAGER} and r.is_active
+        `;
+        if ((others[0]?.count ?? 0) === 0) {
+          const error = new Error("Sistemde en az bir aktif yönetici kalmalıdır.");
+          Object.assign(error, { code: "LAST_MANAGER" });
+          throw error;
+        }
+      }
       const validRoles = input.roleIds.length
         ? await transaction<{ id: string }[]>`
             select id from roles where id = any(${input.roleIds}) and is_active
@@ -61,6 +76,12 @@ export async function PUT(request: Request, route: RouteContext) {
     });
     return Response.json({ ok: true });
   } catch (error) {
+    if (typeof error === "object" && error && "code" in error && error.code === "LAST_MANAGER") {
+      return Response.json(
+        { error: "Sistemde en az bir aktif yönetici kalmalıdır." },
+        { status: 409 },
+      );
+    }
     return apiError(error);
   }
 }

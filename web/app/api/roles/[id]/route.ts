@@ -2,6 +2,7 @@ import { sql } from "@/db";
 import { requireApiPermission } from "@/lib/api-auth";
 import { writeAudit } from "@/lib/audit";
 import { PERMISSIONS } from "@/lib/permissions";
+import { ROLE_CODES } from "@/lib/permissions";
 import { requestContext } from "@/lib/request-context";
 import { apiError, roleUpdateSchema } from "@/lib/validation";
 
@@ -13,6 +14,33 @@ export async function PATCH(request: Request, route: RouteContext) {
   const { id } = await route.params;
   try {
     const input = roleUpdateSchema.parse(await request.json());
+    const protectedRole = await sql<{ code: string; isSystem: boolean }[]>`
+      select code, is_system as "isSystem" from roles where id = ${id}
+    `;
+    if (!protectedRole[0]) {
+      return Response.json({ error: "Rol bulunamadı." }, { status: 404 });
+    }
+    if (protectedRole[0].isSystem && !input.isActive) {
+      return Response.json(
+        { error: "Sistem rolleri pasife alınamaz." },
+        { status: 409 },
+      );
+    }
+    if (protectedRole[0].code === ROLE_CODES.MANAGER) {
+      const required = await sql<{ id: string }[]>`
+        select id from permissions where code in (
+          ${PERMISSIONS.USER_VIEW}, ${PERMISSIONS.USER_ASSIGN_ROLE},
+          ${PERMISSIONS.USER_DISABLE}, ${PERMISSIONS.ROLE_VIEW},
+          ${PERMISSIONS.ROLE_MANAGE}
+        )
+      `;
+      if (required.some((permission) => !input.permissionIds.includes(permission.id))) {
+        return Response.json(
+          { error: "Yönetici rolünün kritik kullanıcı ve rol yönetimi yetkileri kaldırılamaz." },
+          { status: 409 },
+        );
+      }
+    }
     const updated = await sql.begin(async (transaction) => {
       const beforeRows = await transaction`
         select id, code, name, description, is_system as "isSystem",

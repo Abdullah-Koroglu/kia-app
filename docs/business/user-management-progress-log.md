@@ -29,7 +29,7 @@ Ana plan:
 | Faz 4 - Görev bazlı veri yetkilendirmesi | Tamamlandı | %100 | 2026-08-06 |
 | Faz 5 - Memleket | Tamamlandı | %100 | 2026-08-06 |
 | Faz 6 - Kontrol ve onay | Tamamlandı | %100 | 2026-08-06 |
-| Faz 7 - Raporlama ve production hazırlığı | Başlanmadı | %0 | 2026-08-06 |
+| Faz 7 - Raporlama ve production hazırlığı | Tamamlandı | %100 | 2026-08-06 |
 
 Durum değerleri:
 
@@ -60,6 +60,49 @@ Tamamlandı
   `16-20` olur.
 
 ## İlerleme kayıtları
+
+### 2026-08-06 - Faz 7 ve genel implementasyon tamamlandı
+
+**Yapılanlar**
+
+- Yönetici için araştırmacı bazlı aktif/gecikmiş görev, veri girişi, onay,
+  kontrol, düzeltme, deadline ve son aktivite raporu eklendi.
+- Review durumu ve onay versiyon sorgularını destekleyen person indeksleri
+  eklendi.
+- Sistem `MANAGER` rolünün pasife alınması veya kritik yönetim permission'larını
+  kaybetmesi engellendi.
+- Son aktif yönetici koruması eşzamanlı isteklerde advisory transaction lock ile
+  güçlendirildi.
+- Yayın sırası, smoke test, acil yönetici, görev operasyonu, audit ve rollback
+  yaklaşımını içeren operasyon rehberi eklendi.
+- README yeni roller, görevler ve kontrol akışıyla güncellendi.
+
+**İzole migration provası**
+
+- Boş ve geçici bir PostgreSQL 16 container'ı oluşturuldu.
+- `0000-0006` arasındaki 7 migration başarıyla uygulandı.
+- Seed iki kez çalıştırılarak idempotency doğrulandı.
+- Sonuç: 3 rol, 31 permission, 1 test yöneticisi ve 1 user-role bağlantısı.
+- Test yöneticisinin `MANAGER` backfill/ataması doğrulandı.
+- Rapor sorgusundaki tuple distinct SQL sözdizimi PostgreSQL üzerinde çalıştı.
+- Geçici container kalıcı volume oluşturmadan kaldırıldı.
+
+**Son doğrulama**
+
+- `npm test`: 12/12 test başarılı.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı; 15 uygulama sayfası/API grubu derlendi.
+- `git diff --check`: commit öncesinde çalıştırılacak.
+
+**Commit ve push**
+
+- Commit başlığı: `feat: complete researcher progress reporting`
+- Push hedefi: `origin/master`
+
+**Sonuç**
+
+- Faz 0-7 tamamlandı. Production yayını için migration, seed ve smoke test
+  sırası `docs/technical/user-management-operations.md` belgesinde hazırdır.
 
 ### 2026-08-06 - Faz 6 tamamlandı
 
@@ -380,14 +423,14 @@ Tamamlandı
 
 ### Faz 7 - Raporlama ve production hazırlığı
 
-- [ ] Yönetici araştırmacı ilerleme görünümü
-- [ ] Gecikmiş görev raporu
-- [ ] Veri girişi ve kontrol metrikleri
-- [ ] Sorgu/indeks optimizasyonu
-- [ ] Migration ve backfill provası
-- [ ] Production smoke test
-- [ ] Operasyon dokümantasyonu
-- [ ] Commit ve push
+- [x] Yönetici araştırmacı ilerleme görünümü
+- [x] Gecikmiş görev raporu
+- [x] Veri girişi ve kontrol metrikleri
+- [x] Sorgu/indeks optimizasyonu
+- [x] Migration ve backfill provası
+- [x] Production smoke test kontrol listesi
+- [x] Operasyon dokümantasyonu
+- [x] Commit ve push
 
 ## Kayıt tutma kuralı
 

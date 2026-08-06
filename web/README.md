@@ -40,6 +40,16 @@ oluşturulur. Sonradan kullanıcı eklemek veya şifresini yenilemek için:
 npm run user:create -- kullanici-adi guclu-sifre
 ```
 
+Üçüncü argümanla başlangıç rolü seçilebilir:
+
+```bash
+npm run user:create -- kullanici-adi guclu-sifre RESEARCHER
+```
+
+Uygulamada veritabanı tabanlı yönetici, kontrolcü ve araştırmacı rolleri;
+dış kaynak ID aralıklı görevler; deadline/gecikme takibi; tek memleket seçimi
+ve kontrollü onay/düzeltme akışı bulunur.
+
 ## Kontroller
 
 ```bash
@@ -60,3 +70,7 @@ database'ini kullanır. Yeni PostgreSQL container'ı oluşturulmaz.
 
 Migration ve seed işlemleri yeni uygulama sürümü yayına alınmadan önce,
 database'e erişebilen güvenli bir yönetim ortamından çalıştırılmalıdır.
+
+Ayrıntılı yayın ve smoke test adımları için
+[`docs/technical/user-management-operations.md`](../docs/technical/user-management-operations.md)
+belgesini kullanın.

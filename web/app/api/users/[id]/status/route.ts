@@ -30,10 +30,34 @@ export async function POST(request: Request, route: RouteContext) {
     );
   }
   const updated = await sql.begin(async (transaction) => {
+    await transaction`select pg_advisory_xact_lock(7241904)`;
     const before = await transaction<{ isActive: boolean }[]>`
       select is_active as "isActive" from users where id = ${id} for update
     `;
     if (!before[0]) return null;
+    if (!active) {
+      const managerAndOthers = await transaction<
+        { isManager: boolean; otherManagers: number }[]
+      >`
+        select
+          exists (
+            select 1 from user_roles ur join roles r on r.id = ur.role_id
+            where ur.user_id = ${id} and r.code = 'MANAGER' and r.is_active
+          ) as "isManager",
+          (
+            select count(distinct u.id)::int from users u
+            join user_roles ur on ur.user_id = u.id
+            join roles r on r.id = ur.role_id
+            where u.is_active and u.id <> ${id}
+              and r.code = 'MANAGER' and r.is_active
+          ) as "otherManagers"
+      `;
+      if (managerAndOthers[0]?.isManager && managerAndOthers[0].otherManagers === 0) {
+        const error = new Error("Sistemde en az bir aktif yönetici kalmalıdır.");
+        Object.assign(error, { code: "LAST_MANAGER" });
+        throw error;
+      }
+    }
     const after = await transaction`
       update users set
         is_active = ${active},
@@ -56,7 +80,18 @@ export async function POST(request: Request, route: RouteContext) {
       context: requestContext(request),
     });
     return after[0];
+  }).catch((error) => {
+    if (typeof error === "object" && error && "code" in error && error.code === "LAST_MANAGER") {
+      return { lastManagerError: true };
+    }
+    throw error;
   });
+  if (updated && "lastManagerError" in updated) {
+    return Response.json(
+      { error: "Sistemde en az bir aktif yönetici kalmalıdır." },
+      { status: 409 },
+    );
+  }
   if (!updated) {
     return Response.json({ error: "Kullanıcı bulunamadı." }, { status: 404 });
   }
