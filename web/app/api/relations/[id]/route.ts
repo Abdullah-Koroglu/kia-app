@@ -1,7 +1,9 @@
 import { sql } from "@/db";
-import { requireApiUser } from "@/lib/api-auth";
+import { requireApiPermission } from "@/lib/api-auth";
+import { canWriteAnyPerson } from "@/lib/assignments";
 import { writeAudit } from "@/lib/audit";
 import { requestContext } from "@/lib/request-context";
+import { PERMISSIONS } from "@/lib/permissions";
 import { apiError, relationInputSchema } from "@/lib/validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -14,7 +16,9 @@ const relationSelect = sql`
 `;
 
 export async function PATCH(request: Request, route: RouteContext) {
-  const auth = await requireApiUser();
+  const auth = await requireApiPermission(
+    PERMISSIONS.RELATION_UPDATE_IN_ASSIGNMENT,
+  );
   if (auth.response || !auth.user) return auth.response;
   const { id } = await route.params;
 
@@ -25,6 +29,16 @@ export async function PATCH(request: Request, route: RouteContext) {
         select ${relationSelect} from relations where id = ${id} for update
       `;
       if (!beforeRows[0]) return null;
+      const before = beforeRows[0] as Record<string, unknown>;
+      const [oldInScope, newInScope] = await Promise.all([
+        canWriteAnyPerson(transaction as unknown as typeof sql, auth.user.id, [String(before.teacherId), String(before.studentId)]),
+        canWriteAnyPerson(transaction as unknown as typeof sql, auth.user.id, [input.teacherId, input.studentId]),
+      ]);
+      if (!oldInScope || !newInScope) {
+        const error = new Error("İlişki aktif görev kapsamınızda bulunmuyor.");
+        Object.assign(error, { code: "OUT_OF_ASSIGNMENT_SCOPE" });
+        throw error;
+      }
       const afterRows = await transaction`
         update relations set
           teacher_id = ${input.teacherId},
@@ -55,12 +69,17 @@ export async function PATCH(request: Request, route: RouteContext) {
     }
     return Response.json(updated);
   } catch (error) {
+    if (typeof error === "object" && error && "code" in error && error.code === "OUT_OF_ASSIGNMENT_SCOPE") {
+      return Response.json({ error: error instanceof Error ? error.message : "Görev kapsamı dışında." }, { status: 403 });
+    }
     return apiError(error);
   }
 }
 
 export async function DELETE(request: Request, route: RouteContext) {
-  const auth = await requireApiUser();
+  const auth = await requireApiPermission(
+    PERMISSIONS.RELATION_DELETE_IN_ASSIGNMENT,
+  );
   if (auth.response || !auth.user) return auth.response;
   const { id } = await route.params;
 
@@ -70,6 +89,18 @@ export async function DELETE(request: Request, route: RouteContext) {
         select ${relationSelect} from relations where id = ${id} for update
       `;
       if (!rows[0]) return false;
+      const relation = rows[0] as Record<string, unknown>;
+      if (
+        !(await canWriteAnyPerson(
+          transaction as unknown as typeof sql,
+          auth.user.id,
+          [String(relation.teacherId), String(relation.studentId)],
+        ))
+      ) {
+        const error = new Error("İlişki aktif görev kapsamınızda bulunmuyor.");
+        Object.assign(error, { code: "OUT_OF_ASSIGNMENT_SCOPE" });
+        throw error;
+      }
       await transaction`delete from relations where id = ${id}`;
       await writeAudit(transaction as unknown as typeof sql, {
         actor: auth.user,
@@ -86,7 +117,9 @@ export async function DELETE(request: Request, route: RouteContext) {
     }
     return new Response(null, { status: 204 });
   } catch (error) {
+    if (typeof error === "object" && error && "code" in error && error.code === "OUT_OF_ASSIGNMENT_SCOPE") {
+      return Response.json({ error: error instanceof Error ? error.message : "Görev kapsamı dışında." }, { status: 403 });
+    }
     return apiError(error);
   }
 }
-

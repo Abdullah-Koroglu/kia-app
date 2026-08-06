@@ -266,11 +266,24 @@ export const persons = pgTable(
     deathYearHijri: integer("death_year_hijri"),
     deathYearGregorian: integer("death_year_gregorian"),
     detailNote: text("detail_note"),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdUnderAssignmentId: uuid("created_under_assignment_id").references(
+      () => researchAssignments.id,
+      { onDelete: "set null" },
+    ),
+    updatedByUserId: uuid("updated_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     ...timestamps,
   },
   (table) => [
     uniqueIndex("persons_ext_source_id_uq").on(table.extSourceId),
     index("persons_name_idx").on(table.name),
+    index("persons_created_under_assignment_idx").on(
+      table.createdUnderAssignmentId,
+    ),
     check(
       "persons_hijri_year_order_ck",
       sql`${table.birthYearHijri} is null or ${table.deathYearHijri} is null or ${table.deathYearHijri} >= ${table.birthYearHijri}`,

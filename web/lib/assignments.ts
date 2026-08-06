@@ -42,3 +42,65 @@ export async function lockAndFindScopeConflict(
   }
   return null;
 }
+
+export async function findWritableAssignment(
+  database: Queryable,
+  userId: string,
+  extSourceId: number,
+) {
+  const rows = await database<{ id: string }[]>`
+    select a.id
+    from research_assignments a
+    join research_assignment_scopes s on s.assignment_id = a.id
+    where a.researcher_user_id = ${userId}
+      and a.status = 'ACTIVE'
+      and a.starts_at <= now()
+      and ${extSourceId} between s.start_ext_source_id and s.end_ext_source_id
+    order by a.starts_at desc
+    limit 1
+  `;
+  return rows[0]?.id ?? null;
+}
+
+export async function getWritableRanges(database: Queryable, userId: string) {
+  return database<{ startExtSourceId: number; endExtSourceId: number }[]>`
+    select s.start_ext_source_id as "startExtSourceId",
+      s.end_ext_source_id as "endExtSourceId"
+    from research_assignments a
+    join research_assignment_scopes s on s.assignment_id = a.id
+    where a.researcher_user_id = ${userId}
+      and a.status = 'ACTIVE' and a.starts_at <= now()
+    order by s.start_ext_source_id
+  `;
+}
+
+export function isExtSourceIdInRanges(
+  extSourceId: number,
+  ranges: readonly AssignmentScopeInput[],
+) {
+  return ranges.some(
+    (range) =>
+      extSourceId >= range.startExtSourceId &&
+      extSourceId <= range.endExtSourceId,
+  );
+}
+
+export async function canWriteAnyPerson(
+  database: Queryable,
+  userId: string,
+  personIds: readonly string[],
+) {
+  if (!personIds.length) return false;
+  const rows = await database`
+    select 1
+    from persons p
+    join research_assignment_scopes s
+      on p.ext_source_id between s.start_ext_source_id and s.end_ext_source_id
+    join research_assignments a on a.id = s.assignment_id
+    where p.id = any(${personIds})
+      and a.researcher_user_id = ${userId}
+      and a.status = 'ACTIVE' and a.starts_at <= now()
+    limit 1
+  `;
+  return Boolean(rows[0]);
+}

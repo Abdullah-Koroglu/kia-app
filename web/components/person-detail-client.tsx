@@ -50,6 +50,12 @@ type DetailResponse = {
   person: Person;
   teachers: RelationView[];
   students: RelationView[];
+  capabilities: {
+    canEdit: boolean;
+    canDelete: boolean;
+    canChangeExternalId: boolean;
+    canManageRelations: boolean;
+  };
 };
 
 type FilterState = {
@@ -181,6 +187,7 @@ export function PersonDetailClient({ personId }: { personId: string }) {
         setFilters={setFilters}
         dictionaries={dictionaries}
         loading={loading}
+        canManage={detail.capabilities.canManageRelations}
       />
 
       <Card className="my-6">
@@ -196,12 +203,12 @@ export function PersonDetailClient({ personId }: { personId: string }) {
               </CardDescription>
             </div>
           </div>
-          <CardAction>
+          {detail.capabilities.canEdit || detail.capabilities.canChangeExternalId ? <CardAction>
             <Button variant="outline" onClick={() => setPersonFormOpen(true)}>
               <Pencil />
               Kişiyi Düzenle
             </Button>
-          </CardAction>
+          </CardAction> : null}
         </CardHeader>
         <Separator />
         <CardContent className="grid gap-5 md:grid-cols-3">
@@ -237,12 +244,15 @@ export function PersonDetailClient({ personId }: { personId: string }) {
         setFilters={setFilters}
         dictionaries={dictionaries}
         loading={loading}
+        canManage={detail.capabilities.canManageRelations}
       />
 
       <PersonFormDialog
         open={personFormOpen}
         onOpenChange={setPersonFormOpen}
         person={detail.person}
+        canEditDetails={detail.capabilities.canEdit}
+        canChangeExternalId={detail.capabilities.canChangeExternalId}
         onSaved={() => void load()}
       />
       <RelationDialog
@@ -281,6 +291,7 @@ function RelationSection({
   setFilters,
   dictionaries,
   loading,
+  canManage,
 }: {
   title: string;
   emptyText: string;
@@ -292,6 +303,7 @@ function RelationSection({
   setFilters: (filters: FilterState) => void;
   dictionaries: Dictionaries;
   loading: boolean;
+  canManage: boolean;
 }) {
   const hasFilters = Object.values(filters).some(Boolean);
   return (
@@ -336,10 +348,10 @@ function RelationSection({
               <X className="size-4" />
             </Button>
           ) : null}
-          <Button size="sm" onClick={onAdd}>
+          {canManage ? <Button size="sm" onClick={onAdd}>
             <Plus className="size-4" />
             {title === "Hocaları" ? "Hoca Ekle" : "Talebe Ekle"}
-          </Button>
+          </Button> : null}
         </div>
       </CardHeader>
       <Table className="min-w-[900px]">
@@ -382,7 +394,7 @@ function RelationSection({
                 {relation.detailNote || "—"}
               </TableCell>
               <TableCell>
-                <div className="flex justify-end gap-1">
+                {canManage ? <div className="flex justify-end gap-1">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -399,7 +411,7 @@ function RelationSection({
                   >
                     <Trash2 className="text-destructive" />
                   </Button>
-                </div>
+                </div> : null}
               </TableCell>
             </TableRow>
           ))}

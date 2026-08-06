@@ -26,7 +26,7 @@ Ana plan:
 | Faz 1 - RBAC ve kullanıcı güvenliği | Tamamlandı | %100 | 2026-08-06 |
 | Faz 2 - Kullanıcı yönetimi | Tamamlandı | %100 | 2026-08-06 |
 | Faz 3 - Görev yönetimi | Tamamlandı | %100 | 2026-08-06 |
-| Faz 4 - Görev bazlı veri yetkilendirmesi | Başlanmadı | %0 | 2026-08-06 |
+| Faz 4 - Görev bazlı veri yetkilendirmesi | Tamamlandı | %100 | 2026-08-06 |
 | Faz 5 - Memleket | Başlanmadı | %0 | 2026-08-06 |
 | Faz 6 - Kontrol ve onay | Başlanmadı | %0 | 2026-08-06 |
 | Faz 7 - Raporlama ve production hazırlığı | Başlanmadı | %0 | 2026-08-06 |
@@ -60,6 +60,45 @@ Tamamlandı
   `16-20` olur.
 
 ## İlerleme kayıtları
+
+### 2026-08-06 - Faz 4 tamamlandı
+
+**Yapılanlar**
+
+- Person kayıtlarına oluşturan, son güncelleyen ve oluşturulduğu görev
+  bağlantıları eklendi.
+- Araştırmacı âlim oluşturma/güncelleme işlemleri başlamış aktif görev
+  kapsamıyla sınırlandırıldı; deadline geçmesi yetkiyi kapatmıyor.
+- Âlim silme yalnızca `PERSON_DELETE`, dış kaynak ID değiştirme yalnızca
+  `PERSON_CHANGE_EXTERNAL_ID` yetkisine bağlandı.
+- Yönetici rolüyle görev verisi değiştirilemez; yalnızca dış kaynak ID alanı
+  değiştirilebilir.
+- İlişki oluşturma, güncelleme ve silmede en az bir tarafın araştırmacının
+  aktif görev kapsamında olması zorunlu hale getirildi.
+- Hızlı âlim oluşturma mevcut person endpoint'i üzerinden aynı kapsam
+  denetimine tabi tutuldu.
+- Person liste/detay API'leri capability bilgileri döndürüyor; arayüz yetkisiz
+  oluşturma, düzenleme, silme ve ilişki butonlarını göstermiyor.
+- Görev kartlarında ilerleme yüzdesiyle birlikte eksik dış kaynak ID listesi
+  gösteriliyor.
+
+**Doğrulama**
+
+- `npm test`: 10/10 test başarılı.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı.
+- İlk doğrulamada görev kartındaki JSX kapanış hatası yakalanıp okunabilir çok
+  satırlı yapıya çevrilerek düzeltildi.
+
+**Commit ve push**
+
+- Commit başlığı: `feat: enforce assignment scoped data access`
+- Push hedefi: `origin/master`
+
+**Sonraki adım**
+
+- Faz 5: Tek memleket sözlüğü, person bağlantısı, arama/seçim ve tüm aktif
+  kullanıcılar için hızlı memleket oluşturma.
 
 ### 2026-08-06 - Faz 3 tamamlandı
 
@@ -236,15 +275,15 @@ Tamamlandı
 
 ### Faz 4 - Görev bazlı veri yetkilendirmesi
 
-- [ ] Person create/update scope denetimi
-- [ ] Yöneticiye özel delete ve dış kaynak ID değişikliği
-- [ ] Relation kapsam denetimi
-- [ ] Hızlı oluşturma kapsam denetimi
-- [ ] API capability sonuçları
-- [ ] UI işlem görünürlüğü
-- [ ] İlerleme sorguları
-- [ ] Testler
-- [ ] Commit ve push
+- [x] Person create/update scope denetimi
+- [x] Yöneticiye özel delete ve dış kaynak ID değişikliği
+- [x] Relation kapsam denetimi
+- [x] Hızlı oluşturma kapsam denetimi
+- [x] API capability sonuçları
+- [x] UI işlem görünürlüğü
+- [x] İlerleme sorguları
+- [x] Testler
+- [x] Commit ve push
 
 ### Faz 5 - Memleket
 

@@ -1,7 +1,9 @@
 import { sql } from "@/db";
-import { requireApiUser } from "@/lib/api-auth";
+import { requireApiPermission } from "@/lib/api-auth";
+import { findWritableAssignment } from "@/lib/assignments";
 import { writeAudit } from "@/lib/audit";
 import { requestContext } from "@/lib/request-context";
+import { hasPermission, PERMISSIONS } from "@/lib/permissions";
 import { apiError, personInputSchema } from "@/lib/validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -23,8 +25,8 @@ async function getPerson(id: string) {
 }
 
 export async function GET(request: Request, route: RouteContext) {
-  const auth = await requireApiUser();
-  if (auth.response) return auth.response;
+  const auth = await requireApiPermission(PERMISSIONS.PERSON_VIEW);
+  if (auth.response || !auth.user) return auth.response;
   const { id } = await route.params;
   const params = new URL(request.url).searchParams;
   const methodId = Number(params.get("methodId")) || null;
@@ -88,11 +90,31 @@ export async function GET(request: Request, route: RouteContext) {
     `,
   ]);
 
-  return Response.json({ person, teachers, students });
+  const extSourceId = Number(person.extSourceId);
+  const writableAssignmentId = hasPermission(
+    auth.user.permissions,
+    PERMISSIONS.PERSON_UPDATE_IN_ASSIGNMENT,
+  )
+    ? await findWritableAssignment(sql, auth.user.id, extSourceId)
+    : null;
+  return Response.json({
+    person,
+    teachers,
+    students,
+    capabilities: {
+      canEdit: Boolean(writableAssignmentId),
+      canDelete: hasPermission(auth.user.permissions, PERMISSIONS.PERSON_DELETE),
+      canChangeExternalId: hasPermission(
+        auth.user.permissions,
+        PERMISSIONS.PERSON_CHANGE_EXTERNAL_ID,
+      ),
+      canManageRelations: Boolean(writableAssignmentId),
+    },
+  });
 }
 
 export async function PATCH(request: Request, route: RouteContext) {
-  const auth = await requireApiUser();
+  const auth = await requireApiPermission(PERMISSIONS.PERSON_VIEW);
   if (auth.response || !auth.user) return auth.response;
   const { id } = await route.params;
 
@@ -113,6 +135,51 @@ export async function PATCH(request: Request, route: RouteContext) {
       `;
       if (!beforeRows[0]) return null;
 
+      const before = beforeRows[0] as Record<string, unknown>;
+      const externalIdChanged = Number(before.extSourceId) !== input.extSourceId;
+      const canUpdateInScope =
+        hasPermission(
+          auth.user.permissions,
+          PERMISSIONS.PERSON_UPDATE_IN_ASSIGNMENT,
+        ) &&
+        Boolean(
+          await findWritableAssignment(
+            transaction as unknown as typeof sql,
+            auth.user.id,
+            Number(before.extSourceId),
+          ),
+        );
+      const canChangeExternalId = hasPermission(
+        auth.user.permissions,
+        PERMISSIONS.PERSON_CHANGE_EXTERNAL_ID,
+      );
+      if (!canUpdateInScope && !canChangeExternalId) {
+        const error = new Error("Bu âlim aktif görev kapsamınızda bulunmuyor.");
+        Object.assign(error, { code: "OUT_OF_ASSIGNMENT_SCOPE" });
+        throw error;
+      }
+      if (externalIdChanged && !canChangeExternalId) {
+        const error = new Error("Dış kaynak ID yalnızca yönetici tarafından değiştirilebilir.");
+        Object.assign(error, { code: "OUT_OF_ASSIGNMENT_SCOPE" });
+        throw error;
+      }
+      if (!canUpdateInScope && canChangeExternalId) {
+        const unchangedFields = [
+          "name",
+          "nameDescription",
+          "birthYearHijri",
+          "birthYearGregorian",
+          "deathYearHijri",
+          "deathYearGregorian",
+          "detailNote",
+        ].every((field) => (before[field] ?? null) === (input[field as keyof typeof input] ?? null));
+        if (!externalIdChanged || !unchangedFields) {
+          const error = new Error("Yönetici rolüyle yalnızca dış kaynak ID değiştirilebilir.");
+          Object.assign(error, { code: "OUT_OF_ASSIGNMENT_SCOPE" });
+          throw error;
+        }
+      }
+
       const afterRows = await transaction`
         update persons set
           ext_source_id = ${input.extSourceId},
@@ -123,6 +190,7 @@ export async function PATCH(request: Request, route: RouteContext) {
           death_year_hijri = ${input.deathYearHijri},
           death_year_gregorian = ${input.deathYearGregorian},
           detail_note = ${input.detailNote},
+          updated_by_user_id = ${auth.user.id},
           updated_at = now()
         where id = ${id}
         returning
@@ -151,12 +219,15 @@ export async function PATCH(request: Request, route: RouteContext) {
     }
     return Response.json(updated);
   } catch (error) {
+    if (typeof error === "object" && error && "code" in error && error.code === "OUT_OF_ASSIGNMENT_SCOPE") {
+      return Response.json({ error: error instanceof Error ? error.message : "Yetkiniz bulunmuyor." }, { status: 403 });
+    }
     return apiError(error);
   }
 }
 
 export async function DELETE(request: Request, route: RouteContext) {
-  const auth = await requireApiUser();
+  const auth = await requireApiPermission(PERMISSIONS.PERSON_DELETE);
   if (auth.response || !auth.user) return auth.response;
   const { id } = await route.params;
 
@@ -194,4 +265,3 @@ export async function DELETE(request: Request, route: RouteContext) {
     return apiError(error);
   }
 }
-

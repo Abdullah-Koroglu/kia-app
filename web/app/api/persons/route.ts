@@ -1,15 +1,17 @@
 import { sql } from "@/db";
-import { requireApiUser } from "@/lib/api-auth";
+import { requireApiPermission } from "@/lib/api-auth";
+import { findWritableAssignment, getWritableRanges, isExtSourceIdInRanges } from "@/lib/assignments";
 import { writeAudit } from "@/lib/audit";
 import { requestContext } from "@/lib/request-context";
 import { normalizeSearchText } from "@/lib/search";
+import { hasPermission, PERMISSIONS } from "@/lib/permissions";
 import { apiError, personInputSchema } from "@/lib/validation";
 
 const PAGE_SIZE = 50;
 
 export async function GET(request: Request) {
-  const auth = await requireApiUser();
-  if (auth.response) return auth.response;
+  const auth = await requireApiPermission(PERMISSIONS.PERSON_VIEW);
+  if (auth.response || !auth.user) return auth.response;
 
   const params = new URL(request.url).searchParams;
   const q = params.get("q")?.trim() ?? "";
@@ -67,7 +69,7 @@ export async function GET(request: Request) {
     ${deathCondition}
   `;
 
-  const [items, countRows] = await Promise.all([
+  const [rawItems, countRows, writableRanges] = await Promise.all([
     sql`
       select
         p.id,
@@ -93,7 +95,26 @@ export async function GET(request: Request) {
     sql<{ count: number }[]>`
       select count(*)::int as count from persons p ${where}
     `,
+    hasPermission(auth.user.permissions, PERMISSIONS.PERSON_UPDATE_IN_ASSIGNMENT)
+      ? getWritableRanges(sql, auth.user.id)
+      : Promise.resolve([]),
   ]);
+
+  const items = (rawItems as unknown as { extSourceId: number }[]).map((item) => ({
+    ...item,
+    capabilities: {
+      canEdit:
+        hasPermission(
+          auth.user!.permissions,
+          PERMISSIONS.PERSON_UPDATE_IN_ASSIGNMENT,
+        ) && isExtSourceIdInRanges(item.extSourceId, writableRanges),
+      canDelete: hasPermission(auth.user!.permissions, PERMISSIONS.PERSON_DELETE),
+      canChangeExternalId: hasPermission(
+        auth.user!.permissions,
+        PERMISSIONS.PERSON_CHANGE_EXTERNAL_ID,
+      ),
+    },
+  }));
 
   const total = countRows[0]?.count ?? 0;
   return Response.json({
@@ -102,26 +123,50 @@ export async function GET(request: Request) {
     page: requestedPage,
     pageSize,
     pageCount: Math.max(1, Math.ceil(total / pageSize)),
+    capabilities: {
+      canCreate:
+        hasPermission(
+          auth.user.permissions,
+          PERMISSIONS.PERSON_CREATE_IN_ASSIGNMENT,
+        ) && writableRanges.length > 0,
+      writableRanges,
+    },
   });
 }
 
 export async function POST(request: Request) {
-  const auth = await requireApiUser();
+  const auth = await requireApiPermission(
+    PERMISSIONS.PERSON_CREATE_IN_ASSIGNMENT,
+  );
   if (auth.response || !auth.user) return auth.response;
 
   try {
     const input = personInputSchema.parse(await request.json());
     const context = requestContext(request);
     const person = await sql.begin(async (transaction) => {
+      const assignmentId = await findWritableAssignment(
+        transaction as unknown as typeof sql,
+        auth.user.id,
+        input.extSourceId,
+      );
+      if (!assignmentId) {
+        const error = new Error(
+          "Bu dış kaynak ID aktif görev kapsamınızda bulunmuyor.",
+        );
+        Object.assign(error, { code: "OUT_OF_ASSIGNMENT_SCOPE" });
+        throw error;
+      }
       const rows = await transaction`
         insert into persons (
           ext_source_id, name, name_description,
           birth_year_hijri, birth_year_gregorian,
-          death_year_hijri, death_year_gregorian, detail_note
+          death_year_hijri, death_year_gregorian, detail_note,
+          created_by_user_id, created_under_assignment_id, updated_by_user_id
         ) values (
           ${input.extSourceId}, ${input.name}, ${input.nameDescription},
           ${input.birthYearHijri}, ${input.birthYearGregorian},
-          ${input.deathYearHijri}, ${input.deathYearGregorian}, ${input.detailNote}
+          ${input.deathYearHijri}, ${input.deathYearGregorian}, ${input.detailNote},
+          ${auth.user.id}, ${assignmentId}, ${auth.user.id}
         )
         returning
           id, ext_source_id as "extSourceId", name,
@@ -146,6 +191,17 @@ export async function POST(request: Request) {
 
     return Response.json(person, { status: 201 });
   } catch (error) {
+    if (
+      typeof error === "object" &&
+      error &&
+      "code" in error &&
+      error.code === "OUT_OF_ASSIGNMENT_SCOPE"
+    ) {
+      return Response.json(
+        { error: error instanceof Error ? error.message : "Görev kapsamı dışında." },
+        { status: 403 },
+      );
+    }
     return apiError(error);
   }
 }

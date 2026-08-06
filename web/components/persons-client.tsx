@@ -39,6 +39,7 @@ export function PersonsClient() {
     page: 1,
     pageSize: 50,
     pageCount: 1,
+    capabilities: { canCreate: false, writableRanges: [] },
   });
   const [queryInput, setQueryInput] = useState("");
   const [query, setQuery] = useState("");
@@ -123,7 +124,7 @@ export function PersonsClient() {
             {data.total.toLocaleString("tr-TR")} kişi kaydı
           </p>
         </div>
-        <Button
+        {data.capabilities.canCreate ? <Button
           onClick={() => {
             setEditing(null);
             setFormOpen(true);
@@ -131,7 +132,7 @@ export function PersonsClient() {
         >
           <Plus className="size-4" />
           Yeni Kişi
-        </Button>
+        </Button> : null}
       </div>
 
       <Card className="mb-5">
@@ -253,7 +254,7 @@ export function PersonsClient() {
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-1">
-                    <Button
+                    {person.capabilities?.canEdit || person.capabilities?.canChangeExternalId ? <Button
                       variant="ghost"
                       size="icon"
                       aria-label={`${person.name} kişisini düzenle`}
@@ -263,15 +264,15 @@ export function PersonsClient() {
                       }}
                     >
                       <Pencil className="size-4" />
-                    </Button>
-                    <Button
+                    </Button> : null}
+                    {person.capabilities?.canDelete ? <Button
                       variant="ghost"
                       size="icon"
                       aria-label={`${person.name} kişisini sil`}
                       onClick={() => setDeleting(person)}
                     >
                       <Trash2 className="text-destructive" />
-                    </Button>
+                    </Button> : null}
                   </div>
                 </TableCell>
               </TableRow>
@@ -323,6 +324,9 @@ export function PersonsClient() {
         open={formOpen}
         onOpenChange={setFormOpen}
         person={editing}
+        canEditDetails={editing?.capabilities?.canEdit ?? true}
+        canChangeExternalId={editing?.capabilities?.canChangeExternalId ?? false}
+        writableRanges={data.capabilities.writableRanges}
         onSaved={() => void load()}
       />
       <ConfirmDialog

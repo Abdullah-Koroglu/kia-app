@@ -8,6 +8,11 @@ export type Person = {
   deathYearHijri: number | null;
   deathYearGregorian: number | null;
   detailNote: string | null;
+  capabilities?: {
+    canEdit: boolean;
+    canDelete: boolean;
+    canChangeExternalId: boolean;
+  };
 };
 
 export type DictionaryItem = {
@@ -48,6 +53,10 @@ export type PersonPageResult = {
   page: number;
   pageSize: number;
   pageCount: number;
+  capabilities: {
+    canCreate: boolean;
+    writableRanges: { startExtSourceId: number; endExtSourceId: number }[];
+  };
 };
 
 export type RoleSummary = {
@@ -98,4 +107,5 @@ export type ResearchAssignment = {
   scopes: AssignmentScope[];
   assignedCount: number;
   createdCount: number;
+  missingIds: number[];
 };

@@ -60,11 +60,17 @@ export function PersonFormDialog({
   open,
   onOpenChange,
   person,
+  canEditDetails = true,
+  canChangeExternalId = false,
+  writableRanges = [],
   onSaved,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   person?: Person | null;
+  canEditDetails?: boolean;
+  canChangeExternalId?: boolean;
+  writableRanges?: { startExtSourceId: number; endExtSourceId: number }[];
   onSaved: (person: Person) => void;
 }) {
   const [draft, setDraft] = useState<PersonDraft>(emptyDraft);
@@ -119,7 +125,9 @@ export function PersonFormDialog({
         <DialogHeader>
           <DialogTitle>{person ? "Kişiyi düzenle" : "Yeni kişi"}</DialogTitle>
           <DialogDescription>
-            Araştırma kaynağındaki temel kişi bilgilerini girin.
+            {person && !canEditDetails
+              ? "Yönetici olarak yalnızca dış kaynak ID değerini değiştirebilirsiniz."
+              : "Araştırma kaynağındaki temel kişi bilgilerini girin."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit}>
@@ -131,6 +139,7 @@ export function PersonFormDialog({
                 type="number"
                 step="1"
                 required
+                disabled={Boolean(person) && !canChangeExternalId}
                 value={draft.extSourceId}
                 onChange={(event) => set("extSourceId", event.target.value)}
               />
@@ -140,6 +149,7 @@ export function PersonFormDialog({
               <Input
                 id="name"
                 required
+                disabled={Boolean(person) && !canEditDetails}
                 maxLength={180}
                 value={draft.name}
                 onChange={(event) => set("name", event.target.value)}
@@ -149,6 +159,7 @@ export function PersonFormDialog({
               <Label htmlFor="nameDescription">İsim açıklaması</Label>
               <Input
                 id="nameDescription"
+                disabled={Boolean(person) && !canEditDetails}
                 value={draft.nameDescription}
                 onChange={(event) => set("nameDescription", event.target.value)}
                 placeholder="Tam isim, künye, nisbe veya lakap"
@@ -159,34 +170,44 @@ export function PersonFormDialog({
               label="Hicrî doğum yılı"
               value={draft.birthYearHijri}
               onChange={(value) => set("birthYearHijri", value)}
+              disabled={Boolean(person) && !canEditDetails}
             />
             <YearField
               id="birthYearGregorian"
               label="Miladî doğum yılı"
               value={draft.birthYearGregorian}
               onChange={(value) => set("birthYearGregorian", value)}
+              disabled={Boolean(person) && !canEditDetails}
             />
             <YearField
               id="deathYearHijri"
               label="Hicrî vefat yılı"
               value={draft.deathYearHijri}
               onChange={(value) => set("deathYearHijri", value)}
+              disabled={Boolean(person) && !canEditDetails}
             />
             <YearField
               id="deathYearGregorian"
               label="Miladî vefat yılı"
               value={draft.deathYearGregorian}
               onChange={(value) => set("deathYearGregorian", value)}
+              disabled={Boolean(person) && !canEditDetails}
             />
             <div className="grid gap-2 sm:col-span-2">
               <Label htmlFor="detailNote">Detay notu</Label>
               <Textarea
                 id="detailNote"
+                disabled={Boolean(person) && !canEditDetails}
                 value={draft.detailNote}
                 onChange={(event) => set("detailNote", event.target.value)}
               />
             </div>
           </div>
+          {!person && writableRanges.length ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Yazılabilir ID aralıkları: {writableRanges.map((range) => `${range.startExtSourceId}–${range.endExtSourceId}`).join(", ")}
+            </p>
+          ) : null}
           {error ? (
             <p className="mt-4 text-sm text-destructive">{error}</p>
           ) : null}
@@ -214,11 +235,13 @@ function YearField({
   label,
   value,
   onChange,
+  disabled,
 }: {
   id: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="grid gap-2">
@@ -227,6 +250,7 @@ function YearField({
         id={id}
         type="number"
         step="1"
+        disabled={disabled}
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />

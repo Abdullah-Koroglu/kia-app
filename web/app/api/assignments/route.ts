@@ -33,6 +33,17 @@ export async function GET() {
             and p.ext_source_id between ps.start_ext_source_id and ps.end_ext_source_id
         )
       ) as "createdCount"
+      ,coalesce((
+        select jsonb_agg(missing.ext_id order by missing.ext_id)
+        from (
+          select generate_series(ms.start_ext_source_id, ms.end_ext_source_id) as ext_id
+          from research_assignment_scopes ms
+          where ms.assignment_id = a.id
+        ) missing
+        where not exists (
+          select 1 from persons mp where mp.ext_source_id = missing.ext_id
+        )
+      ), '[]'::jsonb) as "missingIds"
     from research_assignments a
     join users u on u.id = a.researcher_user_id
     left join research_assignment_scopes s on s.assignment_id = a.id

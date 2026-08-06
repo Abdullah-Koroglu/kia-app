@@ -76,7 +76,78 @@ export function AssignmentsClient({ manager }: { manager: boolean }) {
     {message ? <Alert variant="destructive" className="mb-4"><AlertDescription>{message}</AlertDescription></Alert> : null}
     <div className="grid gap-4 lg:grid-cols-2">{items.map((item) => {
       const percent = item.assignedCount ? Math.round(item.createdCount / item.assignedCount * 100) : 0;
-      return <Card key={item.id}><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle>{item.title}</CardTitle><p className="mt-1 text-sm text-muted-foreground">{item.researcherName}</p></div><div className="flex gap-1"><Badge variant={item.status === "ACTIVE" ? "default" : "outline"}>{item.status === "ACTIVE" ? (item.isOverdue ? "Gecikmiş" : "Aktif") : item.status === "COMPLETED" ? "Tamamlandı" : "İptal"}</Badge>{manager && item.status === "ACTIVE" ? <Button variant="ghost" size="icon" onClick={() => startEdit(item)}><Pencil /></Button> : null}</div></div></CardHeader><CardContent className="space-y-4"><div className="flex flex-wrap gap-1">{item.scopes.map((scope) => <Badge variant="secondary" key={`${scope.startExtSourceId}-${scope.endExtSourceId}`}>{scope.startExtSourceId}–{scope.endExtSourceId}</Badge>)}</div><div><div className="mb-1 flex justify-between text-sm"><span>{item.createdCount}/{item.assignedCount} âlim</span><span>%{percent}</span></div><div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary" style={{ width: `${percent}%` }} /></div></div><div className="flex items-center gap-2 text-sm text-muted-foreground"><Clock3 className="size-4" />Deadline: {new Date(item.deadlineAt).toLocaleString("tr-TR")}</div>{manager && item.status === "ACTIVE" ? <div className="flex justify-end gap-2"><Button size="sm" variant="outline" disabled={busy} onClick={() => void changeStatus(item, "CANCEL")}><XCircle /> İptal Et</Button><Button size="sm" disabled={busy} onClick={() => void changeStatus(item, "COMPLETE")}><CheckCircle2 /> Tamamla</Button></div> : null}</CardContent></Card>;
+      return (
+        <Card key={item.id}>
+          <CardHeader>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <CardTitle>{item.title}</CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {item.researcherName}
+                </p>
+              </div>
+              <div className="flex gap-1">
+                <Badge variant={item.status === "ACTIVE" ? "default" : "outline"}>
+                  {item.status === "ACTIVE"
+                    ? item.isOverdue
+                      ? "Gecikmiş"
+                      : "Aktif"
+                    : item.status === "COMPLETED"
+                      ? "Tamamlandı"
+                      : "İptal"}
+                </Badge>
+                {manager && item.status === "ACTIVE" ? (
+                  <Button variant="ghost" size="icon" onClick={() => startEdit(item)}>
+                    <Pencil />
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-1">
+              {item.scopes.map((scope) => (
+                <Badge variant="secondary" key={`${scope.startExtSourceId}-${scope.endExtSourceId}`}>
+                  {scope.startExtSourceId}–{scope.endExtSourceId}
+                </Badge>
+              ))}
+            </div>
+            <div>
+              <div className="mb-1 flex justify-between text-sm">
+                <span>{item.createdCount}/{item.assignedCount} âlim</span>
+                <span>%{percent}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div className="h-full bg-primary" style={{ width: `${percent}%` }} />
+              </div>
+              {item.missingIds.length ? (
+                <div className="mt-3">
+                  <p className="mb-1 text-xs font-medium text-muted-foreground">Eksik ID&apos;ler</p>
+                  <div className="flex max-h-20 flex-wrap gap-1 overflow-y-auto">
+                    {item.missingIds.map((missingId) => (
+                      <Badge variant="outline" key={missingId}>{missingId}</Badge>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock3 className="size-4" />
+              Deadline: {new Date(item.deadlineAt).toLocaleString("tr-TR")}
+            </div>
+            {manager && item.status === "ACTIVE" ? (
+              <div className="flex justify-end gap-2">
+                <Button size="sm" variant="outline" disabled={busy} onClick={() => void changeStatus(item, "CANCEL")}>
+                  <XCircle /> İptal Et
+                </Button>
+                <Button size="sm" disabled={busy} onClick={() => void changeStatus(item, "COMPLETE")}>
+                  <CheckCircle2 /> Tamamla
+                </Button>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      );
     })}</div>
 
     <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>{editing ? "Görevi düzenle" : "Yeni görev"}</DialogTitle></DialogHeader><form onSubmit={save} className="space-y-4">
