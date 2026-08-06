@@ -17,8 +17,8 @@ export async function POST(request: Request) {
   const username = body.username?.trim() ?? "";
   const password = body.password ?? "";
   const rows = username
-    ? await sql<{ id: string; username: string; passwordHash: string }[]>`
-        select id, username, password_hash as "passwordHash"
+    ? await sql<{ id: string; username: string; passwordHash: string; isActive: boolean }[]>`
+        select id, username, password_hash as "passwordHash", is_active as "isActive"
         from users
         where lower(username) = lower(${username})
         limit 1
@@ -27,14 +27,18 @@ export async function POST(request: Request) {
 
   const user = rows[0];
   const valid =
-    Boolean(user) && Boolean(password) && (await verifyPassword(password, user.passwordHash));
+    user?.isActive === true &&
+    Boolean(password) &&
+    (await verifyPassword(password, user.passwordHash));
 
   if (!valid) {
     await writeAudit(sql, {
       actorUsername: username || "(boş)",
       actorType: "USER",
       action: "LOGIN_FAILED",
-      metadata: { result: "invalid_credentials" },
+      metadata: {
+        result: user && !user.isActive ? "inactive_user" : "invalid_credentials",
+      },
       context,
     });
     await new Promise((resolve) => setTimeout(resolve, 350));
@@ -45,8 +49,15 @@ export async function POST(request: Request) {
   }
 
   const session = await createSession(user.id);
+  await sql`update users set last_login_at = now() where id = ${user.id}`;
   await writeAudit(sql, {
-    actor: { id: user.id, username: user.username },
+    actor: {
+      id: user.id,
+      username: user.username,
+      displayName: user.username,
+      roles: [],
+      permissions: [],
+    },
     action: "LOGIN_SUCCESS",
     metadata: { result: "success" },
     context,
@@ -59,4 +70,3 @@ export async function POST(request: Request) {
   );
   return response;
 }
-

@@ -1,4 +1,6 @@
 import {
+  type AnyPgColumn,
+  boolean,
   check,
   index,
   integer,
@@ -28,9 +30,95 @@ export const users = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     username: varchar("username", { length: 80 }).notNull(),
     passwordHash: text("password_hash").notNull(),
+    displayName: varchar("display_name", { length: 160 }),
+    isActive: boolean("is_active").default(true).notNull(),
+    mustChangePassword: boolean("must_change_password").default(false).notNull(),
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    createdByUserId: uuid("created_by_user_id").references(
+      (): AnyPgColumn => users.id,
+      { onDelete: "set null" },
+    ),
+    disabledAt: timestamp("disabled_at", { withTimezone: true }),
+    disabledByUserId: uuid("disabled_by_user_id").references(
+      (): AnyPgColumn => users.id,
+      { onDelete: "set null" },
+    ),
     ...timestamps,
   },
   (table) => [uniqueIndex("users_username_uq").on(table.username)],
+);
+
+export const roles = pgTable(
+  "roles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: varchar("code", { length: 80 }).notNull(),
+    name: varchar("name", { length: 120 }).notNull(),
+    description: text("description"),
+    isSystem: boolean("is_system").default(false).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("roles_code_uq").on(table.code),
+    uniqueIndex("roles_name_uq").on(table.name),
+  ],
+);
+
+export const permissions = pgTable(
+  "permissions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: varchar("code", { length: 100 }).notNull(),
+    name: varchar("name", { length: 160 }).notNull(),
+    description: text("description"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [uniqueIndex("permissions_code_uq").on(table.code)],
+);
+
+export const rolePermissions = pgTable(
+  "role_permissions",
+  {
+    roleId: uuid("role_id")
+      .notNull()
+      .references(() => roles.id, { onDelete: "cascade" }),
+    permissionId: uuid("permission_id")
+      .notNull()
+      .references(() => permissions.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    uniqueIndex("role_permissions_role_permission_uq").on(
+      table.roleId,
+      table.permissionId,
+    ),
+    index("role_permissions_role_id_idx").on(table.roleId),
+  ],
+);
+
+export const userRoles = pgTable(
+  "user_roles",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    roleId: uuid("role_id")
+      .notNull()
+      .references(() => roles.id, { onDelete: "restrict" }),
+    assignedByUserId: uuid("assigned_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    assignedAt: timestamp("assigned_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("user_roles_user_role_uq").on(table.userId, table.roleId),
+    index("user_roles_user_id_idx").on(table.userId),
+    index("user_roles_role_id_idx").on(table.roleId),
+  ],
 );
 
 export const sessions = pgTable(
@@ -229,4 +317,3 @@ export const auditFieldChanges = pgTable(
   },
   (table) => [index("audit_field_changes_event_idx").on(table.auditEventId)],
 );
-

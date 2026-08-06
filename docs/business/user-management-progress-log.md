@@ -23,7 +23,7 @@ Ana plan:
 | Faz | Durum | İlerleme | Son güncelleme |
 |---|---|---:|---|
 | Faz 0 - Dokümantasyon ve kararlar | Tamamlandı | %100 | 2026-08-06 |
-| Faz 1 - RBAC ve kullanıcı güvenliği | Başlanmadı | %0 | 2026-08-06 |
+| Faz 1 - RBAC ve kullanıcı güvenliği | Tamamlandı | %100 | 2026-08-06 |
 | Faz 2 - Kullanıcı yönetimi | Başlanmadı | %0 | 2026-08-06 |
 | Faz 3 - Görev yönetimi | Başlanmadı | %0 | 2026-08-06 |
 | Faz 4 - Görev bazlı veri yetkilendirmesi | Başlanmadı | %0 | 2026-08-06 |
@@ -60,6 +60,41 @@ Tamamlandı
   `16-20` olur.
 
 ## İlerleme kayıtları
+
+### 2026-08-06 - Faz 1 tamamlandı
+
+**Yapılanlar**
+
+- `roles`, `permissions`, `role_permissions` ve `user_roles` şemaları eklendi.
+- Kullanıcılara görünen ad, aktiflik, şifre değiştirme, son giriş ve devre dışı
+  bırakma alanları eklendi.
+- Yönetici, kontrolcü ve araştırmacı rolleri ile permission eşleşmeleri
+  migration ve seed içine alındı.
+- Migration mevcut kullanıcıları yönetici rolüyle güvenli biçimde backfill
+  edecek şekilde hazırlandı.
+- Auth context kullanıcının aktif rollerini ve permission'larını döndürecek
+  şekilde genişletildi.
+- Pasif kullanıcının login ve mevcut session kullanımına devam etmesi
+  engellendi.
+- Merkezi `requirePermission` ve API permission helper'ı eklendi.
+- CLI kullanıcı oluşturma aracı rol atamasını destekleyecek şekilde yenilendi.
+
+**Doğrulama**
+
+- `npm test`: 6/6 test başarılı.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı.
+- `git diff --check`: commit öncesinde çalıştırılacak.
+
+**Commit ve push**
+
+- Commit başlığı: `feat: add database backed authorization`
+- Push hedefi: `origin/master`
+
+**Sonraki adım**
+
+- Faz 2: Kullanıcı listeleme, oluşturma, güncelleme, rol atama, aktif/pasif ve
+  şifre sıfırlama API/arayüzlerinin implementasyonu.
 
 ### 2026-08-06 - Faz 0 tamamlandı
 
@@ -102,16 +137,16 @@ Tamamlandı
 
 ### Faz 1 - RBAC ve kullanıcı güvenliği
 
-- [ ] Drizzle rol/permission/user-role şeması
-- [ ] Kullanıcı aktiflik ve profil alanları
-- [ ] Migration üretimi ve incelemesi
-- [ ] Başlangıç rol/permission seed'i
-- [ ] Mevcut kullanıcı yönetici backfill'i
-- [ ] Auth user context genişletmesi
-- [ ] Merkezi permission servisi
-- [ ] Son yönetici koruması
-- [ ] Unit ve entegrasyon testleri
-- [ ] Commit ve push
+- [x] Drizzle rol/permission/user-role şeması
+- [x] Kullanıcı aktiflik ve profil alanları
+- [x] Migration üretimi ve incelemesi
+- [x] Başlangıç rol/permission seed'i
+- [x] Mevcut kullanıcı yönetici backfill'i
+- [x] Auth user context genişletmesi
+- [x] Merkezi permission servisi
+- [x] Son yönetici koruması (servis katmanı için kural hazır; Faz 2 API'de uygulanacak)
+- [x] Unit ve entegrasyon testleri
+- [x] Commit ve push
 
 ### Faz 2 - Kullanıcı yönetimi
 
