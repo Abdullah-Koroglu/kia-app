@@ -27,7 +27,7 @@ Ana plan:
 | Faz 2 - Kullanıcı yönetimi | Tamamlandı | %100 | 2026-08-06 |
 | Faz 3 - Görev yönetimi | Tamamlandı | %100 | 2026-08-06 |
 | Faz 4 - Görev bazlı veri yetkilendirmesi | Tamamlandı | %100 | 2026-08-06 |
-| Faz 5 - Memleket | Başlanmadı | %0 | 2026-08-06 |
+| Faz 5 - Memleket | Tamamlandı | %100 | 2026-08-06 |
 | Faz 6 - Kontrol ve onay | Başlanmadı | %0 | 2026-08-06 |
 | Faz 7 - Raporlama ve production hazırlığı | Başlanmadı | %0 | 2026-08-06 |
 
@@ -60,6 +60,37 @@ Tamamlandı
   `16-20` olur.
 
 ## İlerleme kayıtları
+
+### 2026-08-06 - Faz 5 tamamlandı
+
+**Yapılanlar**
+
+- İlişki mekânından ayrı `homelands` sözlüğü oluşturuldu.
+- Âlim başına sıfır veya bir memleket olacak şekilde nullable person bağlantısı
+  eklendi.
+- Normalize ada dayalı büyük/küçük harf ve Türkçe karakter duyarsız mükerrer
+  koruması eklendi.
+- Her aktif ve oturum açmış kullanıcının rol/görev kontrolü olmadan memleket
+  arayabildiği ve oluşturabildiği API eklendi.
+- Âlim formuna memleket seçimi ve listede yoksa hızlı oluşturma akışı eklendi.
+- Oluşturulan memleket otomatik seçiliyor; kişi liste ve detayında gösteriliyor.
+- Memleket oluşturma audit kaydına bağlandı.
+
+**Doğrulama**
+
+- `npm test`: 11/11 test başarılı.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı; `/api/homelands` route'u üretildi.
+
+**Commit ve push**
+
+- Commit başlığı: `feat: add scholar homelands`
+- Push hedefi: `origin/master`
+
+**Sonraki adım**
+
+- Faz 6: Kontrol durumları, içerik versiyonlama, düzeltme yorumu, onay ve
+  kontrol kuyruğu.
 
 ### 2026-08-06 - Faz 4 tamamlandı
 
@@ -287,13 +318,13 @@ Tamamlandı
 
 ### Faz 5 - Memleket
 
-- [ ] Homeland şeması
-- [ ] Person nullable homeland bağlantısı
-- [ ] Arama ve oluşturma API'leri
-- [ ] Seçim/hızlı oluşturma UI'ı
-- [ ] Normalizasyon ve mükerrer kontrolü
-- [ ] Audit ve testler
-- [ ] Commit ve push
+- [x] Homeland şeması
+- [x] Person nullable homeland bağlantısı
+- [x] Arama ve oluşturma API'leri
+- [x] Seçim/hızlı oluşturma UI'ı
+- [x] Normalizasyon ve mükerrer kontrolü
+- [x] Audit ve testler
+- [x] Commit ve push
 
 ### Faz 6 - Kontrol ve onay
 

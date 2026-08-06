@@ -81,6 +81,8 @@ export async function GET(request: Request) {
         p.death_year_hijri as "deathYearHijri",
         p.death_year_gregorian as "deathYearGregorian",
         p.detail_note as "detailNote"
+        ,p.homeland_id as "homelandId"
+        ,(select h.name from homelands h where h.id = p.homeland_id) as "homelandName"
       from persons p
       ${where}
       order by
@@ -160,12 +162,13 @@ export async function POST(request: Request) {
         insert into persons (
           ext_source_id, name, name_description,
           birth_year_hijri, birth_year_gregorian,
-          death_year_hijri, death_year_gregorian, detail_note,
+          death_year_hijri, death_year_gregorian, detail_note, homeland_id,
           created_by_user_id, created_under_assignment_id, updated_by_user_id
         ) values (
           ${input.extSourceId}, ${input.name}, ${input.nameDescription},
           ${input.birthYearHijri}, ${input.birthYearGregorian},
           ${input.deathYearHijri}, ${input.deathYearGregorian}, ${input.detailNote},
+          ${input.homelandId},
           ${auth.user.id}, ${assignmentId}, ${auth.user.id}
         )
         returning
@@ -176,6 +179,7 @@ export async function POST(request: Request) {
           death_year_hijri as "deathYearHijri",
           death_year_gregorian as "deathYearGregorian",
           detail_note as "detailNote"
+          ,homeland_id as "homelandId"
       `;
       const created = rows[0] as Record<string, unknown>;
       await writeAudit(transaction as unknown as typeof sql, {

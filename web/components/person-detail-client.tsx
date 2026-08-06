@@ -227,6 +227,7 @@ export function PersonDetailClient({ personId }: { personId: string }) {
               detail.person.deathYearGregorian,
             )}
           />
+          <Info label="Memleket" value={detail.person.homelandName} />
           <div className="md:col-span-3">
             <Info label="Detay notu" value={detail.person.detailNote} />
           </div>

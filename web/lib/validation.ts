@@ -20,6 +20,10 @@ export const personInputSchema = z
     deathYearHijri: nullableYear,
     deathYearGregorian: nullableYear,
     detailNote: nullableText,
+    homelandId: z
+      .union([z.string().uuid(), z.null()])
+      .optional()
+      .transform((value) => value ?? null),
   })
   .superRefine((data, context) => {
     if (
@@ -144,6 +148,10 @@ export const assignmentInputSchema = z
       }
     }
   });
+
+export const homelandInputSchema = z.object({
+  name: z.string().trim().min(2).max(160),
+});
 
 export function apiError(error: unknown) {
   if (error instanceof z.ZodError) {

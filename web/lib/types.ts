@@ -8,6 +8,8 @@ export type Person = {
   deathYearHijri: number | null;
   deathYearGregorian: number | null;
   detailNote: string | null;
+  homelandId?: string | null;
+  homelandName?: string | null;
   capabilities?: {
     canEdit: boolean;
     canDelete: boolean;

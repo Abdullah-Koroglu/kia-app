@@ -18,6 +18,8 @@ async function getPerson(id: string) {
       death_year_hijri as "deathYearHijri",
       death_year_gregorian as "deathYearGregorian",
       detail_note as "detailNote",
+      homeland_id as "homelandId",
+      (select h.name from homelands h where h.id = persons.homeland_id) as "homelandName",
       created_at as "createdAt", updated_at as "updatedAt"
     from persons where id = ${id}
   `;
@@ -131,6 +133,7 @@ export async function PATCH(request: Request, route: RouteContext) {
           death_year_hijri as "deathYearHijri",
           death_year_gregorian as "deathYearGregorian",
           detail_note as "detailNote"
+          ,homeland_id as "homelandId"
         from persons where id = ${id} for update
       `;
       if (!beforeRows[0]) return null;
@@ -172,6 +175,7 @@ export async function PATCH(request: Request, route: RouteContext) {
           "deathYearHijri",
           "deathYearGregorian",
           "detailNote",
+          "homelandId",
         ].every((field) => (before[field] ?? null) === (input[field as keyof typeof input] ?? null));
         if (!externalIdChanged || !unchangedFields) {
           const error = new Error("Yönetici rolüyle yalnızca dış kaynak ID değiştirilebilir.");
@@ -190,6 +194,7 @@ export async function PATCH(request: Request, route: RouteContext) {
           death_year_hijri = ${input.deathYearHijri},
           death_year_gregorian = ${input.deathYearGregorian},
           detail_note = ${input.detailNote},
+          homeland_id = ${input.homelandId},
           updated_by_user_id = ${auth.user.id},
           updated_at = now()
         where id = ${id}
@@ -201,6 +206,7 @@ export async function PATCH(request: Request, route: RouteContext) {
           death_year_hijri as "deathYearHijri",
           death_year_gregorian as "deathYearGregorian",
           detail_note as "detailNote"
+          ,homeland_id as "homelandId"
       `;
       await writeAudit(transaction as unknown as typeof sql, {
         actor: auth.user,
@@ -242,6 +248,7 @@ export async function DELETE(request: Request, route: RouteContext) {
           death_year_hijri as "deathYearHijri",
           death_year_gregorian as "deathYearGregorian",
           detail_note as "detailNote"
+          ,homeland_id as "homelandId"
         from persons where id = ${id} for update
       `;
       if (!rows[0]) return false;

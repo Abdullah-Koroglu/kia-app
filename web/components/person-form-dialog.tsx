@@ -15,6 +15,13 @@ import {
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 type PersonDraft = {
   extSourceId: string;
@@ -25,6 +32,7 @@ type PersonDraft = {
   deathYearHijri: string;
   deathYearGregorian: string;
   detailNote: string;
+  homelandId: string;
 };
 
 const emptyDraft: PersonDraft = {
@@ -36,6 +44,7 @@ const emptyDraft: PersonDraft = {
   deathYearHijri: "",
   deathYearGregorian: "",
   detailNote: "",
+  homelandId: "",
 };
 
 function draftFromPerson(person?: Person | null): PersonDraft {
@@ -49,6 +58,7 @@ function draftFromPerson(person?: Person | null): PersonDraft {
     deathYearHijri: person.deathYearHijri?.toString() ?? "",
     deathYearGregorian: person.deathYearGregorian?.toString() ?? "",
     detailNote: person.detailNote ?? "",
+    homelandId: person.homelandId ?? "",
   };
 }
 
@@ -76,11 +86,17 @@ export function PersonFormDialog({
   const [draft, setDraft] = useState<PersonDraft>(emptyDraft);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [homelands, setHomelands] = useState<{ id: string; name: string }[]>([]);
+  const [newHomeland, setNewHomeland] = useState("");
 
   useEffect(() => {
     if (open) {
       setDraft(draftFromPerson(person));
       setError("");
+      setNewHomeland("");
+      void api<{ items: { id: string; name: string }[] }>("/api/homelands")
+        .then((data) => setHomelands(data.items))
+        .catch(() => setHomelands([]));
     }
   }, [open, person]);
 
@@ -102,6 +118,7 @@ export function PersonFormDialog({
         deathYearHijri: optionalNumber(draft.deathYearHijri),
         deathYearGregorian: optionalNumber(draft.deathYearGregorian),
         detailNote: draft.detailNote || null,
+        homelandId: draft.homelandId || null,
       };
       const saved = await api<Person>(
         person ? `/api/persons/${person.id}` : "/api/persons",
@@ -114,6 +131,25 @@ export function PersonFormDialog({
       onOpenChange(false);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Kayıt yapılamadı.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function createHomeland() {
+    if (!newHomeland.trim()) return;
+    setBusy(true);
+    setError("");
+    try {
+      const created = await api<{ id: string; name: string }>("/api/homelands", {
+        method: "POST",
+        body: JSON.stringify({ name: newHomeland }),
+      });
+      setHomelands((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name, "tr")));
+      set("homelandId", created.id);
+      setNewHomeland("");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Memleket oluşturulamadı.");
     } finally {
       setBusy(false);
     }
@@ -193,6 +229,26 @@ export function PersonFormDialog({
               onChange={(value) => set("deathYearGregorian", value)}
               disabled={Boolean(person) && !canEditDetails}
             />
+            <div className="grid gap-2 sm:col-span-2">
+              <Label>Memleket</Label>
+              <Select
+                value={draft.homelandId || "none"}
+                onValueChange={(value) => set("homelandId", value === "none" ? "" : value)}
+                disabled={Boolean(person) && !canEditDetails}
+              >
+                <SelectTrigger className="w-full"><SelectValue placeholder="Bilinmiyor" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Bilinmiyor</SelectItem>
+                  {homelands.map((homeland) => <SelectItem value={homeland.id} key={homeland.id}>{homeland.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {!person || canEditDetails ? (
+                <div className="flex gap-2">
+                  <Input value={newHomeland} onChange={(event) => setNewHomeland(event.target.value)} placeholder="Listede yoksa yeni memleket" />
+                  <Button type="button" variant="outline" disabled={busy || !newHomeland.trim()} onClick={() => void createHomeland()}>Ekle</Button>
+                </div>
+              ) : null}
+            </div>
             <div className="grid gap-2 sm:col-span-2">
               <Label htmlFor="detailNote">Detay notu</Label>
               <Textarea

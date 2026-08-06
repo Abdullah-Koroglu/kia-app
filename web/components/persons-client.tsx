@@ -223,6 +223,7 @@ export function PersonsClient() {
               <TableHead>İsim Açıklaması</TableHead>
               <TableHead>Doğum</TableHead>
               <TableHead>Vefat</TableHead>
+              <TableHead>Memleket</TableHead>
               <TableHead className="w-28 text-right">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
@@ -252,6 +253,7 @@ export function PersonsClient() {
                 <TableCell>
                   {yearLabel(person.deathYearHijri, person.deathYearGregorian)}
                 </TableCell>
+                <TableCell>{person.homelandName || "—"}</TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-1">
                     {person.capabilities?.canEdit || person.capabilities?.canChangeExternalId ? <Button

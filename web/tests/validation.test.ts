@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   personInputSchema,
   assignmentInputSchema,
+  homelandInputSchema,
   relationInputSchema,
   roleCreateSchema,
   userCreateSchema,
@@ -83,4 +84,9 @@ test("deadline başlangıçtan sonra olmalıdır", () => {
     scopes: [{ startExtSourceId: 1, endExtSourceId: 20 }],
   });
   assert.equal(result.success, false);
+});
+
+test("memleket adı boş bırakılamaz", () => {
+  assert.equal(homelandInputSchema.safeParse({ name: "  " }).success, false);
+  assert.equal(homelandInputSchema.safeParse({ name: "Kûfe" }).success, true);
 });
