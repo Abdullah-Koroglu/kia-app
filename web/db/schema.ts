@@ -121,6 +121,73 @@ export const userRoles = pgTable(
   ],
 );
 
+export const assignmentStatusEnum = pgEnum("assignment_status", [
+  "DRAFT",
+  "ACTIVE",
+  "COMPLETED",
+  "CANCELLED",
+]);
+
+export const researchAssignments = pgTable(
+  "research_assignments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    researcherUserId: uuid("researcher_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    title: varchar("title", { length: 200 }).notNull(),
+    description: text("description"),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    deadlineAt: timestamp("deadline_at", { withTimezone: true }).notNull(),
+    status: assignmentStatusEnum("status").default("ACTIVE").notNull(),
+    assignedByUserId: uuid("assigned_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    completedByUserId: uuid("completed_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    cancelledByUserId: uuid("cancelled_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    ...timestamps,
+  },
+  (table) => [
+    index("research_assignments_researcher_idx").on(table.researcherUserId),
+    index("research_assignments_status_deadline_idx").on(
+      table.status,
+      table.deadlineAt,
+    ),
+  ],
+);
+
+export const researchAssignmentScopes = pgTable(
+  "research_assignment_scopes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    assignmentId: uuid("assignment_id")
+      .notNull()
+      .references(() => researchAssignments.id, { onDelete: "cascade" }),
+    startExtSourceId: integer("start_ext_source_id").notNull(),
+    endExtSourceId: integer("end_ext_source_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("research_assignment_scopes_assignment_idx").on(table.assignmentId),
+    index("research_assignment_scopes_range_idx").on(
+      table.startExtSourceId,
+      table.endExtSourceId,
+    ),
+    check(
+      "research_assignment_scopes_valid_range_ck",
+      sql`${table.startExtSourceId} > 0 and ${table.endExtSourceId} >= ${table.startExtSourceId}`,
+    ),
+  ],
+);
+
 export const sessions = pgTable(
   "sessions",
   {

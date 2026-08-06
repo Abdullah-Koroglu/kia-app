@@ -105,6 +105,46 @@ export const roleUpdateSchema = z.object({
   permissionIds: z.array(z.string().uuid()),
 });
 
+const assignmentScopeSchema = z.object({
+  startExtSourceId: z.number().int().positive(),
+  endExtSourceId: z.number().int().positive(),
+}).refine((scope) => scope.endExtSourceId >= scope.startExtSourceId, {
+  message: "Bitiş ID başlangıç ID'den küçük olamaz.",
+  path: ["endExtSourceId"],
+});
+
+export const assignmentInputSchema = z
+  .object({
+    researcherUserId: z.string().uuid(),
+    title: z.string().trim().min(2).max(200),
+    description: nullableText,
+    startsAt: z.string().datetime(),
+    deadlineAt: z.string().datetime(),
+    scopes: z.array(assignmentScopeSchema).min(1).max(50),
+  })
+  .superRefine((data, context) => {
+    if (new Date(data.deadlineAt) <= new Date(data.startsAt)) {
+      context.addIssue({
+        code: "custom",
+        path: ["deadlineAt"],
+        message: "Deadline başlangıçtan sonra olmalıdır.",
+      });
+    }
+    const sorted = [...data.scopes].sort(
+      (left, right) => left.startExtSourceId - right.startExtSourceId,
+    );
+    for (let index = 1; index < sorted.length; index += 1) {
+      if (sorted[index].startExtSourceId <= sorted[index - 1].endExtSourceId) {
+        context.addIssue({
+          code: "custom",
+          path: ["scopes"],
+          message: "Aynı görevdeki ID aralıkları çakışamaz.",
+        });
+        break;
+      }
+    }
+  });
+
 export function apiError(error: unknown) {
   if (error instanceof z.ZodError) {
     return Response.json(

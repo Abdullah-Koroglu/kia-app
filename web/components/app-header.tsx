@@ -47,6 +47,11 @@ export function AppHeader({
               <ListTodo className="size-4" /> Görevlerim
             </Link>
           ) : null}
+          {hasPermission(user.permissions, PERMISSIONS.ASSIGNMENT_VIEW_ALL) ? (
+            <Link href="/admin/assignments" className="hidden items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground lg:flex">
+              <ListTodo className="size-4" /> Görevler
+            </Link>
+          ) : null}
           {hasPermission(user.permissions, PERMISSIONS.USER_VIEW) ? (
             <Link href="/admin/users" className="hidden items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground lg:flex">
               <Users className="size-4" /> Kullanıcılar

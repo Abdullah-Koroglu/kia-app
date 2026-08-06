@@ -25,7 +25,7 @@ Ana plan:
 | Faz 0 - Dokümantasyon ve kararlar | Tamamlandı | %100 | 2026-08-06 |
 | Faz 1 - RBAC ve kullanıcı güvenliği | Tamamlandı | %100 | 2026-08-06 |
 | Faz 2 - Kullanıcı yönetimi | Tamamlandı | %100 | 2026-08-06 |
-| Faz 3 - Görev yönetimi | Başlanmadı | %0 | 2026-08-06 |
+| Faz 3 - Görev yönetimi | Tamamlandı | %100 | 2026-08-06 |
 | Faz 4 - Görev bazlı veri yetkilendirmesi | Başlanmadı | %0 | 2026-08-06 |
 | Faz 5 - Memleket | Başlanmadı | %0 | 2026-08-06 |
 | Faz 6 - Kontrol ve onay | Başlanmadı | %0 | 2026-08-06 |
@@ -60,6 +60,39 @@ Tamamlandı
   `16-20` olur.
 
 ## İlerleme kayıtları
+
+### 2026-08-06 - Faz 3 tamamlandı
+
+**Yapılanlar**
+
+- Araştırmacı görev ve çoklu dış kaynak ID kapsamı şemaları eklendi.
+- Görev durumları, başlangıç/deadline, tamamlayan ve iptal eden kullanıcı
+  alanları eklendi.
+- Görev içi ve görevler arası kapsam çakışmaları engellendi.
+- Eşzamanlı görev atamalarında PostgreSQL transaction advisory lock koruması
+  eklendi.
+- Deadline geçince görevin aktif/yazılabilir kalması ve gecikmiş görünmesi
+  uygulandı.
+- Yönetici görev oluşturma, düzenleme, iptal ve tamamlama API/ekranları eklendi.
+- Araştırmacının kendi görevlerini ve temel veri girişi ilerlemesini gördüğü
+  ekran eklendi.
+- Aynı araştırmacıya çakışmayan birden fazla görev verilebiliyor.
+
+**Doğrulama**
+
+- `npm test`: 10/10 test başarılı.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı; görev API ve sayfaları üretildi.
+
+**Commit ve push**
+
+- Commit başlığı: `feat: implement researcher assignments`
+- Push hedefi: `origin/master`
+
+**Sonraki adım**
+
+- Faz 4: Person/relation yazma işlemlerini görev kapsamıyla sınırlandırma,
+  API capability sonuçları ve ayrıntılı ilerleme görünümü.
 
 ### 2026-08-06 - Faz 2 tamamlandı
 
@@ -192,14 +225,14 @@ Tamamlandı
 
 ### Faz 3 - Görev yönetimi
 
-- [ ] Assignment ve scope şeması
-- [ ] Çakışma koruması
-- [ ] Görev CRUD API'leri
-- [ ] Deadline/gecikme hesabı
-- [ ] Yönetici görev ekranları
-- [ ] Araştırmacı Görevlerim ekranı
-- [ ] Testler
-- [ ] Commit ve push
+- [x] Assignment ve scope şeması
+- [x] Çakışma koruması
+- [x] Görev CRUD API'leri
+- [x] Deadline/gecikme hesabı
+- [x] Yönetici görev ekranları
+- [x] Araştırmacı Görevlerim ekranı
+- [x] Testler
+- [x] Commit ve push
 
 ### Faz 4 - Görev bazlı veri yetkilendirmesi
 

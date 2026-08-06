@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   personInputSchema,
+  assignmentInputSchema,
   relationInputSchema,
   roleCreateSchema,
   userCreateSchema,
@@ -55,6 +56,31 @@ test("özel rol kodu teknik formata uymalıdır", () => {
     name: "Özel Rol",
     description: null,
     permissionIds: [],
+  });
+  assert.equal(result.success, false);
+});
+
+test("görev içindeki ID aralıkları çakışamaz", () => {
+  const result = assignmentInputSchema.safeParse({
+    researcherUserId: "00000000-0000-4000-8000-000000000001",
+    title: "Test görevi",
+    startsAt: "2026-08-01T00:00:00.000Z",
+    deadlineAt: "2026-08-31T00:00:00.000Z",
+    scopes: [
+      { startExtSourceId: 1, endExtSourceId: 20 },
+      { startExtSourceId: 15, endExtSourceId: 30 },
+    ],
+  });
+  assert.equal(result.success, false);
+});
+
+test("deadline başlangıçtan sonra olmalıdır", () => {
+  const result = assignmentInputSchema.safeParse({
+    researcherUserId: "00000000-0000-4000-8000-000000000001",
+    title: "Test görevi",
+    startsAt: "2026-08-31T00:00:00.000Z",
+    deadlineAt: "2026-08-01T00:00:00.000Z",
+    scopes: [{ startExtSourceId: 1, endExtSourceId: 20 }],
   });
   assert.equal(result.success, false);
 });

@@ -78,3 +78,24 @@ export type ManagedUser = {
   createdAt: string;
   roles: Pick<RoleSummary, "id" | "code" | "name">[];
 };
+
+export type AssignmentScope = {
+  id?: string;
+  startExtSourceId: number;
+  endExtSourceId: number;
+};
+
+export type ResearchAssignment = {
+  id: string;
+  researcherUserId: string;
+  researcherName: string;
+  title: string;
+  description: string | null;
+  startsAt: string;
+  deadlineAt: string;
+  status: "DRAFT" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+  isOverdue: boolean;
+  scopes: AssignmentScope[];
+  assignedCount: number;
+  createdCount: number;
+};
