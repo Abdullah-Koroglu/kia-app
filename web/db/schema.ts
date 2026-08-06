@@ -271,6 +271,21 @@ export const homelands = pgTable(
   ],
 );
 
+export const personReviewStatusEnum = pgEnum("person_review_status", [
+  "NOT_READY",
+  "READY_FOR_REVIEW",
+  "CHANGES_REQUESTED",
+  "APPROVED",
+]);
+
+export const personReviewActionEnum = pgEnum("person_review_action", [
+  "SUBMITTED",
+  "RESUBMITTED",
+  "APPROVED",
+  "CHANGES_REQUESTED",
+  "APPROVAL_REVOKED",
+]);
+
 export const persons = pgTable(
   "persons",
   {
@@ -296,6 +311,21 @@ export const persons = pgTable(
     updatedByUserId: uuid("updated_by_user_id").references(() => users.id, {
       onDelete: "set null",
     }),
+    reviewStatus: personReviewStatusEnum("review_status")
+      .default("NOT_READY")
+      .notNull(),
+    contentVersion: integer("content_version").default(1).notNull(),
+    approvedVersion: integer("approved_version"),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    approvedByUserId: uuid("approved_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    submittedForReviewAt: timestamp("submitted_for_review_at", {
+      withTimezone: true,
+    }),
+    submittedForReviewByUserId: uuid(
+      "submitted_for_review_by_user_id",
+    ).references(() => users.id, { onDelete: "set null" }),
     ...timestamps,
   },
   (table) => [
@@ -313,6 +343,32 @@ export const persons = pgTable(
       "persons_gregorian_year_order_ck",
       sql`${table.birthYearGregorian} is null or ${table.deathYearGregorian} is null or ${table.deathYearGregorian} >= ${table.birthYearGregorian}`,
     ),
+  ],
+);
+
+export const personReviews = pgTable(
+  "person_reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    personId: uuid("person_id")
+      .notNull()
+      .references(() => persons.id, { onDelete: "cascade" }),
+    reviewerUserId: uuid("reviewer_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    action: personReviewActionEnum("action").notNull(),
+    comment: text("comment"),
+    personVersion: integer("person_version").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("person_reviews_person_created_idx").on(
+      table.personId,
+      table.createdAt,
+    ),
+    index("person_reviews_reviewer_idx").on(table.reviewerUserId),
   ],
 );
 

@@ -28,7 +28,7 @@ Ana plan:
 | Faz 3 - Görev yönetimi | Tamamlandı | %100 | 2026-08-06 |
 | Faz 4 - Görev bazlı veri yetkilendirmesi | Tamamlandı | %100 | 2026-08-06 |
 | Faz 5 - Memleket | Tamamlandı | %100 | 2026-08-06 |
-| Faz 6 - Kontrol ve onay | Başlanmadı | %0 | 2026-08-06 |
+| Faz 6 - Kontrol ve onay | Tamamlandı | %100 | 2026-08-06 |
 | Faz 7 - Raporlama ve production hazırlığı | Başlanmadı | %0 | 2026-08-06 |
 
 Durum değerleri:
@@ -60,6 +60,44 @@ Tamamlandı
   `16-20` olur.
 
 ## İlerleme kayıtları
+
+### 2026-08-06 - Faz 6 tamamlandı
+
+**Yapılanlar**
+
+- Âlim kontrol durumları ve immutable kontrol geçmişi şeması eklendi.
+- Araştırmacı için kontrole gönderme ve düzeltme sonrası yeniden gönderme
+  akışları eklendi.
+- Kontrolcü için onay, zorunlu yorumla düzeltme isteme ve onay geri alma
+  akışları eklendi.
+- Kontrolcü kendi oluşturduğu veya aktif görev kapsamında sorumlu olduğu âlim
+  için kontrol kararı veremiyor.
+- Person ve ilişkileri kapsayan içerik versiyonlama uygulandı; veri/ilişki
+  değişikliği onayı geçersiz kılıyor fakat geçmiş review kaydını koruyor.
+- Onaylanmış kayıt araştırmacı düzenlemesine ve ilişki değişikliğine kapatıldı.
+- Âlim sayfasına durum, kontrol yorumu, kronolojik geçmiş ve onaylayan kişi/tarih
+  ibaresi eklendi.
+- Kontrolcü için durum filtreli kontrol kuyruğu eklendi.
+- Görev kartına onay, kontrol bekleyen ve düzeltme bekleyen sayaçları eklendi.
+- Görev tamamlama bütün atanmış âlimlerin güncel versiyonuyla onaylanması
+  koşuluna bağlandı.
+
+**Doğrulama**
+
+- `npm test`: 12/12 test başarılı.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı; kontrol kuyruğu ve bütün review route'ları üretildi.
+- İlk doğrulamada eksik `Badge` import'u yakalanıp düzeltildi.
+
+**Commit ve push**
+
+- Commit başlığı: `feat: implement scholar review workflow`
+- Push hedefi: `origin/master`
+
+**Sonraki adım**
+
+- Faz 7: Yönetici araştırmacı raporu, indeks/operasyon iyileştirmeleri,
+  migration doğrulaması ve son tam kontrol.
 
 ### 2026-08-06 - Faz 5 tamamlandı
 
@@ -328,17 +366,17 @@ Tamamlandı
 
 ### Faz 6 - Kontrol ve onay
 
-- [ ] Review durumu ve geçmiş şeması
-- [ ] İçerik versiyonlama
-- [ ] Kontrole gönderme
-- [ ] Düzeltme isteme ve yorum
-- [ ] Yeniden gönderme
-- [ ] Onay ve onay geri alma
-- [ ] Kendi kaydını onaylama engeli
-- [ ] Kontrol kuyruğu UI'ı
-- [ ] Âlim sayfasında onay/geçmiş görünümü
-- [ ] Yarış durumu ve entegrasyon testleri
-- [ ] Commit ve push
+- [x] Review durumu ve geçmiş şeması
+- [x] İçerik versiyonlama
+- [x] Kontrole gönderme
+- [x] Düzeltme isteme ve yorum
+- [x] Yeniden gönderme
+- [x] Onay ve onay geri alma
+- [x] Kendi kaydını onaylama engeli
+- [x] Kontrol kuyruğu UI'ı
+- [x] Âlim sayfasında onay/geçmiş görünümü
+- [x] Yarış durumu ve entegrasyon testleri
+- [x] Commit ve push
 
 ### Faz 7 - Raporlama ve production hazırlığı
 

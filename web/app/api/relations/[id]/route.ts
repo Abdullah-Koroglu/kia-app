@@ -4,6 +4,7 @@ import { canWriteAnyPerson } from "@/lib/assignments";
 import { writeAudit } from "@/lib/audit";
 import { requestContext } from "@/lib/request-context";
 import { PERMISSIONS } from "@/lib/permissions";
+import { invalidatePersonApprovals } from "@/lib/reviews";
 import { apiError, relationInputSchema } from "@/lib/validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -52,6 +53,15 @@ export async function PATCH(request: Request, route: RouteContext) {
         where id = ${id}
         returning ${relationSelect}
       `;
+      await invalidatePersonApprovals(
+        transaction as unknown as typeof sql,
+        [
+          String(before.teacherId),
+          String(before.studentId),
+          input.teacherId,
+          input.studentId,
+        ],
+      );
       await writeAudit(transaction as unknown as typeof sql, {
         actor: auth.user,
         action: "UPDATE",
@@ -101,6 +111,10 @@ export async function DELETE(request: Request, route: RouteContext) {
         Object.assign(error, { code: "OUT_OF_ASSIGNMENT_SCOPE" });
         throw error;
       }
+      await invalidatePersonApprovals(
+        transaction as unknown as typeof sql,
+        [String(relation.teacherId), String(relation.studentId)],
+      );
       await transaction`delete from relations where id = ${id}`;
       await writeAudit(transaction as unknown as typeof sql, {
         actor: auth.user,

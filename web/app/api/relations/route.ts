@@ -4,6 +4,7 @@ import { canWriteAnyPerson } from "@/lib/assignments";
 import { writeAudit } from "@/lib/audit";
 import { requestContext } from "@/lib/request-context";
 import { PERMISSIONS } from "@/lib/permissions";
+import { invalidatePersonApprovals } from "@/lib/reviews";
 import { apiError, relationInputSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
@@ -42,6 +43,10 @@ export async function POST(request: Request) {
           detail_note as "detailNote"
       `;
       const created = rows[0] as Record<string, unknown>;
+      await invalidatePersonApprovals(
+        transaction as unknown as typeof sql,
+        [input.teacherId, input.studentId],
+      );
       await writeAudit(transaction as unknown as typeof sql, {
         actor: auth.user,
         action: "CREATE",

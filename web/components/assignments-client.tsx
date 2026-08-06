@@ -130,6 +130,11 @@ export function AssignmentsClient({ manager }: { manager: boolean }) {
                   </div>
                 </div>
               ) : null}
+              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                <Badge variant="secondary">Onay {item.approvedCount}/{item.assignedCount}</Badge>
+                <Badge variant="outline">Kontrol bekleyen {item.reviewPendingCount}</Badge>
+                <Badge variant="outline">Düzeltme bekleyen {item.changesRequestedCount}</Badge>
+              </div>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock3 className="size-4" />
@@ -140,7 +145,7 @@ export function AssignmentsClient({ manager }: { manager: boolean }) {
                 <Button size="sm" variant="outline" disabled={busy} onClick={() => void changeStatus(item, "CANCEL")}>
                   <XCircle /> İptal Et
                 </Button>
-                <Button size="sm" disabled={busy} onClick={() => void changeStatus(item, "COMPLETE")}>
+                <Button size="sm" disabled={busy || item.approvedCount < item.assignedCount} onClick={() => void changeStatus(item, "COMPLETE")}>
                   <CheckCircle2 /> Tamamla
                 </Button>
               </div>

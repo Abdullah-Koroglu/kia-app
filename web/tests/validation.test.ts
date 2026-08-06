@@ -4,6 +4,7 @@ import {
   personInputSchema,
   assignmentInputSchema,
   homelandInputSchema,
+  changeRequestSchema,
   relationInputSchema,
   roleCreateSchema,
   userCreateSchema,
@@ -89,4 +90,13 @@ test("deadline başlangıçtan sonra olmalıdır", () => {
 test("memleket adı boş bırakılamaz", () => {
   assert.equal(homelandInputSchema.safeParse({ name: "  " }).success, false);
   assert.equal(homelandInputSchema.safeParse({ name: "Kûfe" }).success, true);
+});
+
+test("düzeltme talebi yorum gerektirir", () => {
+  assert.equal(changeRequestSchema.safeParse({ comment: "" }).success, false);
+  assert.equal(
+    changeRequestSchema.safeParse({ comment: "Vefat tarihini kontrol edin." })
+      .success,
+    true,
+  );
 });

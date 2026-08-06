@@ -10,6 +10,12 @@ export type Person = {
   detailNote: string | null;
   homelandId?: string | null;
   homelandName?: string | null;
+  reviewStatus?: "NOT_READY" | "READY_FOR_REVIEW" | "CHANGES_REQUESTED" | "APPROVED";
+  contentVersion?: number;
+  approvedVersion?: number | null;
+  approvedAt?: string | null;
+  approvedByName?: string | null;
+  submittedForReviewAt?: string | null;
   capabilities?: {
     canEdit: boolean;
     canDelete: boolean;
@@ -110,4 +116,30 @@ export type ResearchAssignment = {
   assignedCount: number;
   createdCount: number;
   missingIds: number[];
+  approvedCount: number;
+  reviewPendingCount: number;
+  changesRequestedCount: number;
+};
+
+export type PersonReview = {
+  id: string;
+  action: "SUBMITTED" | "RESUBMITTED" | "APPROVED" | "CHANGES_REQUESTED" | "APPROVAL_REVOKED";
+  comment: string | null;
+  personVersion: number;
+  createdAt: string;
+  reviewerUserId: string;
+  reviewerName: string;
+};
+
+export type ReviewQueueItem = {
+  id: string;
+  extSourceId: number;
+  name: string;
+  reviewStatus: string;
+  contentVersion: number;
+  submittedForReviewAt: string | null;
+  researcherName: string | null;
+  assignmentTitle: string | null;
+  deadlineAt: string | null;
+  isOverdue: boolean;
 };

@@ -16,6 +16,28 @@ export async function POST(request: Request, route: RouteContext) {
   const auth = await requireApiPermission(permission);
   if (auth.response || !auth.user) return auth.response;
   const status = body.action === "CANCEL" ? "CANCELLED" : "COMPLETED";
+  if (status === "COMPLETED") {
+    const counts = await sql<{ assignedCount: number; approvedCount: number }[]>`
+      select
+        coalesce(sum(s.end_ext_source_id - s.start_ext_source_id + 1), 0)::int as "assignedCount",
+        (
+          select count(distinct p.ext_source_id)::int from persons p
+          where p.review_status = 'APPROVED' and p.approved_version = p.content_version
+            and exists (
+              select 1 from research_assignment_scopes ps
+              where ps.assignment_id = ${id}
+                and p.ext_source_id between ps.start_ext_source_id and ps.end_ext_source_id
+            )
+        ) as "approvedCount"
+      from research_assignment_scopes s where s.assignment_id = ${id}
+    `;
+    if (!counts[0] || counts[0].approvedCount < counts[0].assignedCount) {
+      return Response.json(
+        { error: "Görev ancak bütün âlimler girilip güncel versiyonları onaylandığında tamamlanabilir." },
+        { status: 409 },
+      );
+    }
+  }
   const rows = await sql`
     update research_assignments set status = ${status},
       cancelled_at = ${status === "CANCELLED" ? new Date().toISOString() : null}::timestamptz,

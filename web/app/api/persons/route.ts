@@ -83,6 +83,11 @@ export async function GET(request: Request) {
         p.detail_note as "detailNote"
         ,p.homeland_id as "homelandId"
         ,(select h.name from homelands h where h.id = p.homeland_id) as "homelandName"
+        ,p.review_status as "reviewStatus"
+        ,p.content_version as "contentVersion"
+        ,p.approved_version as "approvedVersion"
+        ,p.approved_at as "approvedAt"
+        ,(select coalesce(u.display_name, u.username) from users u where u.id = p.approved_by_user_id) as "approvedByName"
       from persons p
       ${where}
       order by

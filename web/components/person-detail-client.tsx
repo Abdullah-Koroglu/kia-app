@@ -4,6 +4,9 @@ import Link from "next/link";
 import {
   ArrowLeft,
   BookOpen,
+  CheckCircle2,
+  ClipboardCheck,
+  MessageSquareWarning,
   Pencil,
   Plus,
   Trash2,
@@ -12,7 +15,12 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/client";
-import type { Dictionaries, Person, RelationView } from "@/lib/types";
+import type {
+  Dictionaries,
+  Person,
+  PersonReview,
+  RelationView,
+} from "@/lib/types";
 import { yearLabel } from "@/lib/utils";
 import { PersonFormDialog } from "./person-form-dialog";
 import { RelationDialog } from "./relation-dialog";
@@ -45,6 +53,7 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
+import { Textarea } from "./ui/textarea";
 
 type DetailResponse = {
   person: Person;
@@ -55,6 +64,10 @@ type DetailResponse = {
     canDelete: boolean;
     canChangeExternalId: boolean;
     canManageRelations: boolean;
+    canSubmitReview: boolean;
+    canApprove: boolean;
+    canRequestChanges: boolean;
+    canRevokeApproval: boolean;
   };
 };
 
@@ -93,6 +106,9 @@ export function PersonDetailClient({ personId }: { personId: string }) {
     null,
   );
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [reviews, setReviews] = useState<PersonReview[]>([]);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewBusy, setReviewBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -101,12 +117,16 @@ export function PersonDetailClient({ personId }: { personId: string }) {
       if (value) params.set(key, value);
     }
     try {
-      const [detailData, dictionaryData] = await Promise.all([
+      const [detailData, dictionaryData, reviewData] = await Promise.all([
         api<DetailResponse>(`/api/persons/${personId}?${params}`),
         api<Dictionaries>("/api/dictionaries"),
+        api<{ items: PersonReview[] }>(`/api/persons/${personId}/reviews`).catch(
+          () => ({ items: [] }),
+        ),
       ]);
       setDetail(detailData);
       setDictionaries(dictionaryData);
+      setReviews(reviewData.items);
       setMessage("");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Kişi yüklenemedi.");
@@ -131,6 +151,49 @@ export function PersonDetailClient({ personId }: { personId: string }) {
       setDeletingRelation(null);
     } finally {
       setDeleteBusy(false);
+    }
+  }
+
+  async function submitForReview() {
+    setReviewBusy(true);
+    try {
+      await api(`/api/persons/${personId}/submit-review`, {
+        method: "POST",
+        body: "{}",
+      });
+      await load();
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Kontrole gönderilemedi.",
+      );
+    } finally {
+      setReviewBusy(false);
+    }
+  }
+
+  async function reviewDecision(
+    action: "approve" | "request-changes" | "revoke",
+  ) {
+    if (action === "request-changes" && !reviewComment.trim()) {
+      setMessage("Düzeltme talebi için yorum yazın.");
+      return;
+    }
+    setReviewBusy(true);
+    try {
+      await api(`/api/persons/${personId}/reviews/${action}`, {
+        method: "POST",
+        body: JSON.stringify({ comment: reviewComment || null }),
+      });
+      setReviewComment("");
+      await load();
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Kontrol işlemi tamamlanamadı.",
+      );
+    } finally {
+      setReviewBusy(false);
     }
   }
 
@@ -175,6 +238,17 @@ export function PersonDetailClient({ personId }: { personId: string }) {
           <AlertDescription>{message}</AlertDescription>
         </Alert>
       ) : null}
+
+      <ReviewCard
+        person={detail.person}
+        reviews={reviews}
+        capabilities={detail.capabilities}
+        comment={reviewComment}
+        setComment={setReviewComment}
+        busy={reviewBusy}
+        onSubmit={() => void submitForReview()}
+        onDecision={(action) => void reviewDecision(action)}
+      />
 
       <RelationSection
         title="Hocaları"
@@ -278,6 +352,145 @@ export function PersonDetailClient({ personId }: { personId: string }) {
         busy={deleteBusy}
       />
     </>
+  );
+}
+
+function ReviewCard({
+  person,
+  reviews,
+  capabilities,
+  comment,
+  setComment,
+  busy,
+  onSubmit,
+  onDecision,
+}: {
+  person: Person;
+  reviews: PersonReview[];
+  capabilities: DetailResponse["capabilities"];
+  comment: string;
+  setComment: (value: string) => void;
+  busy: boolean;
+  onSubmit: () => void;
+  onDecision: (action: "approve" | "request-changes" | "revoke") => void;
+}) {
+  const statusLabels = {
+    NOT_READY: "Hazırlanıyor",
+    READY_FOR_REVIEW: "Kontrol bekliyor",
+    CHANGES_REQUESTED: "Düzeltme bekleniyor",
+    APPROVED: "Onaylandı",
+  } as const;
+  const latestChange = reviews.find(
+    (review) => review.action === "CHANGES_REQUESTED",
+  );
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardCheck className="size-5" /> Kontrol Durumu
+            </CardTitle>
+            <CardDescription>
+              Veri versiyonu {person.contentVersion ?? 1}
+            </CardDescription>
+          </div>
+          <Badge
+            variant={person.reviewStatus === "APPROVED" ? "default" : "secondary"}
+          >
+            {statusLabels[person.reviewStatus ?? "NOT_READY"]}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {person.reviewStatus === "APPROVED" ? (
+          <Alert>
+            <CheckCircle2 className="size-4" />
+            <AlertDescription>
+              Bu âlim {person.approvedByName} tarafından {person.approvedAt
+                ? new Date(person.approvedAt).toLocaleString("tr-TR")
+                : ""} tarihinde onaylanmıştır.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        {person.reviewStatus === "CHANGES_REQUESTED" && latestChange ? (
+          <Alert>
+            <MessageSquareWarning className="size-4" />
+            <AlertDescription>
+              <span className="font-medium">{latestChange.reviewerName}:</span>{" "}
+              {latestChange.comment}
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        {capabilities.canSubmitReview ? (
+          <Button onClick={onSubmit} disabled={busy}>
+            <ClipboardCheck />
+            {person.reviewStatus === "CHANGES_REQUESTED"
+              ? "Yeniden Kontrole Gönder"
+              : "Kontrole Gönder"}
+          </Button>
+        ) : null}
+        {(capabilities.canApprove || capabilities.canRequestChanges) &&
+        person.reviewStatus === "READY_FOR_REVIEW" ? (
+          <div className="space-y-3 rounded-md border p-4">
+            <div className="grid gap-2">
+              <Label htmlFor="reviewComment">Kontrol yorumu</Label>
+              <Textarea
+                id="reviewComment"
+                value={comment}
+                onChange={(event) => setComment(event.target.value)}
+                placeholder="Onay için opsiyonel, düzeltme talebi için zorunlu"
+              />
+            </div>
+            <div className="flex flex-wrap justify-end gap-2">
+              {capabilities.canRequestChanges ? (
+                <Button
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => onDecision("request-changes")}
+                >
+                  <MessageSquareWarning /> Düzeltme İste
+                </Button>
+              ) : null}
+              {capabilities.canApprove ? (
+                <Button disabled={busy} onClick={() => onDecision("approve")}>
+                  <CheckCircle2 /> Onayla
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+        {capabilities.canRevokeApproval && person.reviewStatus === "APPROVED" ? (
+          <Button
+            variant="outline"
+            disabled={busy}
+            onClick={() => onDecision("revoke")}
+          >
+            Onayı Geri Al
+          </Button>
+        ) : null}
+        {reviews.length ? (
+          <div>
+            <h3 className="mb-2 text-sm font-medium">Kontrol geçmişi</h3>
+            <div className="space-y-2">
+              {reviews.map((review) => (
+                <div key={review.id} className="rounded-md border px-3 py-2 text-sm">
+                  <div className="flex justify-between gap-3">
+                    <span className="font-medium">{review.reviewerName} · {review.action}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(review.createdAt).toLocaleString("tr-TR")}
+                    </span>
+                  </div>
+                  {review.comment ? (
+                    <p className="mt-1 text-muted-foreground">{review.comment}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 

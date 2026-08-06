@@ -98,6 +98,7 @@ export async function canWriteAnyPerson(
       on p.ext_source_id between s.start_ext_source_id and s.end_ext_source_id
     join research_assignments a on a.id = s.assignment_id
     where p.id = any(${personIds})
+      and p.review_status <> 'APPROVED'
       and a.researcher_user_id = ${userId}
       and a.status = 'ACTIVE' and a.starts_at <= now()
     limit 1

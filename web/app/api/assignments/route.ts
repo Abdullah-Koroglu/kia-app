@@ -44,6 +44,34 @@ export async function GET() {
           select 1 from persons mp where mp.ext_source_id = missing.ext_id
         )
       ), '[]'::jsonb) as "missingIds"
+      ,(
+        select count(distinct ap.ext_source_id)::int
+        from persons ap where ap.review_status = 'APPROVED'
+          and ap.approved_version = ap.content_version
+          and exists (
+            select 1 from research_assignment_scopes aps
+            where aps.assignment_id = a.id
+              and ap.ext_source_id between aps.start_ext_source_id and aps.end_ext_source_id
+          )
+      ) as "approvedCount"
+      ,(
+        select count(distinct rp.ext_source_id)::int
+        from persons rp where rp.review_status = 'READY_FOR_REVIEW'
+          and exists (
+            select 1 from research_assignment_scopes rs
+            where rs.assignment_id = a.id
+              and rp.ext_source_id between rs.start_ext_source_id and rs.end_ext_source_id
+          )
+      ) as "reviewPendingCount"
+      ,(
+        select count(distinct cp.ext_source_id)::int
+        from persons cp where cp.review_status = 'CHANGES_REQUESTED'
+          and exists (
+            select 1 from research_assignment_scopes cs
+            where cs.assignment_id = a.id
+              and cp.ext_source_id between cs.start_ext_source_id and cs.end_ext_source_id
+          )
+      ) as "changesRequestedCount"
     from research_assignments a
     join users u on u.id = a.researcher_user_id
     left join research_assignment_scopes s on s.assignment_id = a.id

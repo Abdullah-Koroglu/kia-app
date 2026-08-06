@@ -20,6 +20,10 @@ async function getPerson(id: string) {
       detail_note as "detailNote",
       homeland_id as "homelandId",
       (select h.name from homelands h where h.id = persons.homeland_id) as "homelandName",
+      review_status as "reviewStatus", content_version as "contentVersion",
+      approved_version as "approvedVersion", approved_at as "approvedAt",
+      (select coalesce(u.display_name, u.username) from users u where u.id = persons.approved_by_user_id) as "approvedByName",
+      submitted_for_review_at as "submittedForReviewAt",
       created_at as "createdAt", updated_at as "updatedAt"
     from persons where id = ${id}
   `;
@@ -104,13 +108,28 @@ export async function GET(request: Request, route: RouteContext) {
     teachers,
     students,
     capabilities: {
-      canEdit: Boolean(writableAssignmentId),
+      canEdit:
+        Boolean(writableAssignmentId) && person.reviewStatus !== "APPROVED",
       canDelete: hasPermission(auth.user.permissions, PERMISSIONS.PERSON_DELETE),
       canChangeExternalId: hasPermission(
         auth.user.permissions,
         PERMISSIONS.PERSON_CHANGE_EXTERNAL_ID,
       ),
-      canManageRelations: Boolean(writableAssignmentId),
+      canManageRelations:
+        Boolean(writableAssignmentId) && person.reviewStatus !== "APPROVED",
+      canSubmitReview:
+        Boolean(writableAssignmentId) &&
+        (person.reviewStatus === "NOT_READY" ||
+          person.reviewStatus === "CHANGES_REQUESTED"),
+      canApprove: hasPermission(auth.user.permissions, PERMISSIONS.PERSON_APPROVE),
+      canRequestChanges: hasPermission(
+        auth.user.permissions,
+        PERMISSIONS.PERSON_REQUEST_CHANGES,
+      ),
+      canRevokeApproval: hasPermission(
+        auth.user.permissions,
+        PERMISSIONS.PERSON_APPROVAL_REVOKE,
+      ),
     },
   });
 }
@@ -134,6 +153,8 @@ export async function PATCH(request: Request, route: RouteContext) {
           death_year_gregorian as "deathYearGregorian",
           detail_note as "detailNote"
           ,homeland_id as "homelandId"
+          ,review_status as "reviewStatus"
+          ,content_version as "contentVersion"
         from persons where id = ${id} for update
       `;
       if (!beforeRows[0]) return null;
@@ -145,7 +166,7 @@ export async function PATCH(request: Request, route: RouteContext) {
           auth.user.permissions,
           PERMISSIONS.PERSON_UPDATE_IN_ASSIGNMENT,
         ) &&
-        Boolean(
+        before.reviewStatus !== "APPROVED" && Boolean(
           await findWritableAssignment(
             transaction as unknown as typeof sql,
             auth.user.id,
@@ -196,6 +217,14 @@ export async function PATCH(request: Request, route: RouteContext) {
           detail_note = ${input.detailNote},
           homeland_id = ${input.homelandId},
           updated_by_user_id = ${auth.user.id},
+          content_version = content_version + 1,
+          review_status = case
+            when review_status = 'CHANGES_REQUESTED' then 'CHANGES_REQUESTED'::person_review_status
+            else 'NOT_READY'::person_review_status
+          end,
+          approved_version = null,
+          approved_at = null,
+          approved_by_user_id = null,
           updated_at = now()
         where id = ${id}
         returning
@@ -207,6 +236,8 @@ export async function PATCH(request: Request, route: RouteContext) {
           death_year_gregorian as "deathYearGregorian",
           detail_note as "detailNote"
           ,homeland_id as "homelandId"
+          ,review_status as "reviewStatus"
+          ,content_version as "contentVersion"
       `;
       await writeAudit(transaction as unknown as typeof sql, {
         actor: auth.user,

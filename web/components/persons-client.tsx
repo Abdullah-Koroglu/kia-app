@@ -19,6 +19,7 @@ import { PersonFormDialog } from "./person-form-dialog";
 import { PersonPicker } from "./person-picker";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import { Card, CardContent, CardFooter } from "./ui/card";
 import { ConfirmDialog } from "./ui/confirm-dialog";
 import { Input } from "./ui/input";
@@ -224,6 +225,7 @@ export function PersonsClient() {
               <TableHead>Doğum</TableHead>
               <TableHead>Vefat</TableHead>
               <TableHead>Memleket</TableHead>
+              <TableHead>Kontrol</TableHead>
               <TableHead className="w-28 text-right">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
@@ -254,6 +256,11 @@ export function PersonsClient() {
                   {yearLabel(person.deathYearHijri, person.deathYearGregorian)}
                 </TableCell>
                 <TableCell>{person.homelandName || "—"}</TableCell>
+                <TableCell>
+                  <Badge variant={person.reviewStatus === "APPROVED" ? "default" : "outline"}>
+                    {person.reviewStatus === "APPROVED" ? "Onaylı" : person.reviewStatus === "READY_FOR_REVIEW" ? "Kontrolde" : person.reviewStatus === "CHANGES_REQUESTED" ? "Düzeltme" : "Hazırlanıyor"}
+                  </Badge>
+                </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-1">
                     {person.capabilities?.canEdit || person.capabilities?.canChangeExternalId ? <Button
