@@ -3,7 +3,7 @@ import { requireApiPermission } from "@/lib/api-auth";
 import { canWriteAnyPerson } from "@/lib/assignments";
 import { writeAudit } from "@/lib/audit";
 import { requestContext } from "@/lib/request-context";
-import { PERMISSIONS } from "@/lib/permissions";
+import { PERMISSIONS, ROLE_CODES } from "@/lib/permissions";
 import { invalidatePersonApprovals } from "@/lib/reviews";
 import { apiError, relationInputSchema } from "@/lib/validation";
 
@@ -31,10 +31,13 @@ export async function PATCH(request: Request, route: RouteContext) {
       `;
       if (!beforeRows[0]) return null;
       const before = beforeRows[0] as Record<string, unknown>;
-      const [oldInScope, newInScope] = await Promise.all([
-        canWriteAnyPerson(transaction as unknown as typeof sql, auth.user.id, [String(before.teacherId), String(before.studentId)]),
-        canWriteAnyPerson(transaction as unknown as typeof sql, auth.user.id, [input.teacherId, input.studentId]),
-      ]);
+      const isManager = auth.user.roles.includes(ROLE_CODES.MANAGER);
+      const [oldInScope, newInScope] = isManager
+        ? [true, true]
+        : await Promise.all([
+            canWriteAnyPerson(transaction as unknown as typeof sql, auth.user.id, [String(before.teacherId), String(before.studentId)]),
+            canWriteAnyPerson(transaction as unknown as typeof sql, auth.user.id, [input.teacherId, input.studentId]),
+          ]);
       if (!oldInScope || !newInScope) {
         const error = new Error("İlişki aktif görev kapsamınızda bulunmuyor.");
         Object.assign(error, { code: "OUT_OF_ASSIGNMENT_SCOPE" });
@@ -101,6 +104,7 @@ export async function DELETE(request: Request, route: RouteContext) {
       if (!rows[0]) return false;
       const relation = rows[0] as Record<string, unknown>;
       if (
+        !auth.user.roles.includes(ROLE_CODES.MANAGER) &&
         !(await canWriteAnyPerson(
           transaction as unknown as typeof sql,
           auth.user.id,

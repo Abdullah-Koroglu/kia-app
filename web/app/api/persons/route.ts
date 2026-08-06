@@ -4,7 +4,7 @@ import { findWritableAssignment, getWritableRanges, isExtSourceIdInRanges } from
 import { writeAudit } from "@/lib/audit";
 import { requestContext } from "@/lib/request-context";
 import { normalizeSearchText } from "@/lib/search";
-import { hasPermission, PERMISSIONS } from "@/lib/permissions";
+import { hasPermission, PERMISSIONS, ROLE_CODES } from "@/lib/permissions";
 import { apiError, personInputSchema } from "@/lib/validation";
 
 const PAGE_SIZE = 50;
@@ -21,6 +21,7 @@ export async function GET(request: Request) {
   const birthYear = Number(params.get("birthYear")) || null;
   const deathYear = Number(params.get("deathYear")) || null;
   const compact = params.get("compact") === "true";
+  const isManager = auth.user.roles.includes(ROLE_CODES.MANAGER);
   const requestedPage = Math.max(1, Number(params.get("page")) || 1);
   const pageSize = compact ? 20 : PAGE_SIZE;
   const offset = (requestedPage - 1) * pageSize;
@@ -111,10 +112,10 @@ export async function GET(request: Request) {
     ...item,
     capabilities: {
       canEdit:
-        hasPermission(
+        isManager || (hasPermission(
           auth.user!.permissions,
           PERMISSIONS.PERSON_UPDATE_IN_ASSIGNMENT,
-        ) && isExtSourceIdInRanges(item.extSourceId, writableRanges),
+        ) && isExtSourceIdInRanges(item.extSourceId, writableRanges)),
       canDelete: hasPermission(auth.user!.permissions, PERMISSIONS.PERSON_DELETE),
       canChangeExternalId: hasPermission(
         auth.user!.permissions,
@@ -132,10 +133,10 @@ export async function GET(request: Request) {
     pageCount: Math.max(1, Math.ceil(total / pageSize)),
     capabilities: {
       canCreate:
-        hasPermission(
+        isManager || (hasPermission(
           auth.user.permissions,
           PERMISSIONS.PERSON_CREATE_IN_ASSIGNMENT,
-        ) && writableRanges.length > 0,
+        ) && writableRanges.length > 0),
       writableRanges,
     },
   });
@@ -151,12 +152,15 @@ export async function POST(request: Request) {
     const input = personInputSchema.parse(await request.json());
     const context = requestContext(request);
     const person = await sql.begin(async (transaction) => {
-      const assignmentId = await findWritableAssignment(
-        transaction as unknown as typeof sql,
-        auth.user.id,
-        input.extSourceId,
-      );
-      if (!assignmentId) {
+      const isManager = auth.user.roles.includes(ROLE_CODES.MANAGER);
+      const assignmentId = isManager
+        ? null
+        : await findWritableAssignment(
+            transaction as unknown as typeof sql,
+            auth.user.id,
+            input.extSourceId,
+          );
+      if (!isManager && !assignmentId) {
         const error = new Error(
           "Bu dış kaynak ID aktif görev kapsamınızda bulunmuyor.",
         );

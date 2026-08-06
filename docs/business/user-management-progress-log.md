@@ -61,6 +61,41 @@ Tamamlandı
 
 ## İlerleme kayıtları
 
+### 2026-08-07 - Yönetici kapsamı ve mekân yönetimi tamamlandı
+
+**Yapılanlar**
+
+- Yönetici kontrol/onay kararları hariç bütün uygulama işlemlerine yetkili
+  hale getirildi.
+- Yönetici âlim ve ilişki oluşturma/güncelleme/silme işlemlerinde araştırmacı
+  görevi veya ID kapsamına ihtiyaç duymuyor.
+- Onay, düzeltme talebi, onay geri alma ve kontrol kuyruğu yetkileri yalnızca
+  kontrolcü rolünde bırakıldı.
+- Mekân listeleme, oluşturma, yeniden adlandırma ve silme API/arayüzü eklendi.
+- İlişkide kullanılan mekânların silinmesi hem UI hem foreign key ile
+  engellendi.
+- `0007_manager_places.sql` migration'ı eklendi.
+
+**Doğrulama**
+
+- `npm test`: 13/13 test başarılı.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı; mekân yönetimi route'ları üretildi.
+- İzole PostgreSQL 16 üzerinde 8 migration ve seed başarıyla çalıştı.
+- Yöneticiye dört mekân ve beş person/relation operasyon yetkisi geldiği,
+  kontrol karar yetkilerinin gelmediği SQL ile doğrulandı.
+- Geçici doğrulama container'ı kaldırıldı.
+
+**Commit ve push**
+
+- Commit başlığı: `feat: grant managers full non-review access`
+- Push hedefi: `origin/master`
+
+**Production notu**
+
+- Mevcut production kurulumunda yeni yetkilerin oluşması için migration ve
+  seed çalıştırılmalı, ardından uygulama yeniden build edilip açılmalıdır.
+
 ### 2026-08-06 - Faz 7 ve genel implementasyon tamamlandı
 
 **Yapılanlar**

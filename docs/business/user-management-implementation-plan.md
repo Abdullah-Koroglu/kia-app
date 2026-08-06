@@ -36,7 +36,7 @@ işlemi hangi dış kaynak ID'leri üzerinde yapabileceğini belirler.
 | Çoklu görev | Aynı araştırmacının aynı anda birden fazla çakışmayan görevi olabilir |
 | Âlim silme | Yalnızca yönetici yetkisiyle yapılabilir |
 | Dış kaynak ID değiştirme | Yalnızca yönetici yetkisiyle yapılabilir |
-| Yönetici veri girişi | Yönetici rolü tek başına âlim girişi sağlamaz; ayrıca araştırmacı rolü gerekir |
+| Yönetici veri girişi | Yönetici kontrol kararları hariç bütün işlemleri görev kapsamına ihtiyaç duymadan yapar |
 | Memleket | Âlim başına en fazla bir opsiyonel memleket bulunur |
 | Memleket oluşturma | Her aktif, oturum açmış kullanıcı yeni memleket oluşturabilir |
 | Kontrol | Yetkili kontrolcü âlimi onaylar veya zorunlu düzeltme yorumu bırakır |
@@ -166,7 +166,7 @@ permission birleşimidir.
 | Görev oluşturma/değiştirme | Evet | Hayır | Hayır |
 | Tüm ilerlemeyi görme | Evet | Hayır | Hayır |
 | Kendi görevini görme | Rol ayrıca verilirse | Hayır | Evet |
-| Görev kapsamındaki âlimi oluşturma | Araştırmacı rolü de varsa | Hayır | Evet |
+| Âlim oluşturma | Evet, görev kapsamı aranmaz | Hayır | Yalnızca görev kapsamında |
 | Âlim silme | Evet | Hayır | Hayır |
 | Dış kaynak ID değiştirme | Evet | Hayır | Hayır |
 | Kontrol kuyruğunu görme | Kontrolcü rolü de varsa | Evet | Hayır |
@@ -375,6 +375,10 @@ bulunan görev `ACTIVE` kalır ve gecikmiş görünür.
 ## 10. Memleket modeli
 
 Mevcut `places` tablosu ilişki mekânıdır ve memleket için kullanılmayacaktır.
+
+Mekânlar yöneticinin `/admin/places` ekranından oluşturulabilir, yeniden
+adlandırılabilir ve kullanılmıyorsa silinebilir. Bir ilişkide kullanılan mekân
+referans bütünlüğünü korumak için silinemez.
 
 ### 10.1 `homelands`
 

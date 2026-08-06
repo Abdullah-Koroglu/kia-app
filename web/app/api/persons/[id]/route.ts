@@ -3,7 +3,7 @@ import { requireApiPermission } from "@/lib/api-auth";
 import { findWritableAssignment } from "@/lib/assignments";
 import { writeAudit } from "@/lib/audit";
 import { requestContext } from "@/lib/request-context";
-import { hasPermission, PERMISSIONS } from "@/lib/permissions";
+import { hasPermission, PERMISSIONS, ROLE_CODES } from "@/lib/permissions";
 import { apiError, personInputSchema } from "@/lib/validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -97,6 +97,7 @@ export async function GET(request: Request, route: RouteContext) {
   ]);
 
   const extSourceId = Number(person.extSourceId);
+  const isManager = auth.user.roles.includes(ROLE_CODES.MANAGER);
   const writableAssignmentId = hasPermission(
     auth.user.permissions,
     PERMISSIONS.PERSON_UPDATE_IN_ASSIGNMENT,
@@ -109,14 +110,16 @@ export async function GET(request: Request, route: RouteContext) {
     students,
     capabilities: {
       canEdit:
-        Boolean(writableAssignmentId) && person.reviewStatus !== "APPROVED",
+        isManager ||
+        (Boolean(writableAssignmentId) && person.reviewStatus !== "APPROVED"),
       canDelete: hasPermission(auth.user.permissions, PERMISSIONS.PERSON_DELETE),
       canChangeExternalId: hasPermission(
         auth.user.permissions,
         PERMISSIONS.PERSON_CHANGE_EXTERNAL_ID,
       ),
       canManageRelations:
-        Boolean(writableAssignmentId) && person.reviewStatus !== "APPROVED",
+        isManager ||
+        (Boolean(writableAssignmentId) && person.reviewStatus !== "APPROVED"),
       canSubmitReview:
         Boolean(writableAssignmentId) &&
         (person.reviewStatus === "NOT_READY" ||
@@ -160,9 +163,11 @@ export async function PATCH(request: Request, route: RouteContext) {
       if (!beforeRows[0]) return null;
 
       const before = beforeRows[0] as Record<string, unknown>;
+      const isManager = auth.user.roles.includes(ROLE_CODES.MANAGER);
       const externalIdChanged = Number(before.extSourceId) !== input.extSourceId;
       const canUpdateInScope =
-        hasPermission(
+        isManager ||
+        (hasPermission(
           auth.user.permissions,
           PERMISSIONS.PERSON_UPDATE_IN_ASSIGNMENT,
         ) &&
@@ -172,7 +177,7 @@ export async function PATCH(request: Request, route: RouteContext) {
             auth.user.id,
             Number(before.extSourceId),
           ),
-        );
+        ));
       const canChangeExternalId = hasPermission(
         auth.user.permissions,
         PERMISSIONS.PERSON_CHANGE_EXTERNAL_ID,

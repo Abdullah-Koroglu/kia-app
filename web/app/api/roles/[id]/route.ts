@@ -28,15 +28,16 @@ export async function PATCH(request: Request, route: RouteContext) {
     }
     if (protectedRole[0].code === ROLE_CODES.MANAGER) {
       const required = await sql<{ id: string }[]>`
-        select id from permissions where code in (
-          ${PERMISSIONS.USER_VIEW}, ${PERMISSIONS.USER_ASSIGN_ROLE},
-          ${PERMISSIONS.USER_DISABLE}, ${PERMISSIONS.ROLE_VIEW},
-          ${PERMISSIONS.ROLE_MANAGE}
+        select id from permissions where code not in (
+          ${PERMISSIONS.REVIEW_QUEUE_VIEW}, ${PERMISSIONS.PERSON_APPROVE},
+          ${PERMISSIONS.PERSON_REQUEST_CHANGES},
+          ${PERMISSIONS.PERSON_REVIEW_COMMENT},
+          ${PERMISSIONS.PERSON_APPROVAL_REVOKE}
         )
       `;
       if (required.some((permission) => !input.permissionIds.includes(permission.id))) {
         return Response.json(
-          { error: "Yönetici rolünün kritik kullanıcı ve rol yönetimi yetkileri kaldırılamaz." },
+          { error: "Yönetici rolünün kontrol kararları dışındaki yetkileri kaldırılamaz." },
           { status: 409 },
         );
       }

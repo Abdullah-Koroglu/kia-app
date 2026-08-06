@@ -153,6 +153,10 @@ export const homelandInputSchema = z.object({
   name: z.string().trim().min(2).max(160),
 });
 
+export const placeInputSchema = z.object({
+  name: z.string().trim().min(2).max(160),
+});
+
 export const reviewCommentSchema = z.object({
   comment: z.string().trim().max(10_000).optional().transform((value) => value || null),
 });

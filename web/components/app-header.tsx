@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardCheck, ListTodo, LogOut, Shield, Users } from "lucide-react";
+import { ClipboardCheck, ListTodo, LogOut, MapPin, Shield, Users } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/client";
 import { hasPermission, PERMISSIONS } from "@/lib/permissions";
@@ -65,6 +65,11 @@ export function AppHeader({
           {hasPermission(user.permissions, PERMISSIONS.ROLE_VIEW) ? (
             <Link href="/admin/roles" className="hidden items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground lg:flex">
               <Shield className="size-4" /> Roller
+            </Link>
+          ) : null}
+          {hasPermission(user.permissions, PERMISSIONS.PLACE_VIEW) ? (
+            <Link href="/admin/places" className="hidden items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground xl:flex">
+              <MapPin className="size-4" /> Mekânlar
             </Link>
           ) : null}
           {hasPermission(user.permissions, PERMISSIONS.REVIEW_QUEUE_VIEW) ? (

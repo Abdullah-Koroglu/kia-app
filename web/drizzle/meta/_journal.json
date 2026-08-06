@@ -50,6 +50,13 @@
       "when": 1786051715600,
       "tag": "0006_spotty_warstar",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786053616598,
+      "tag": "0007_manager_places",
+      "breakpoints": true
     }
   ]
 }

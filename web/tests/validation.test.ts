@@ -5,6 +5,7 @@ import {
   assignmentInputSchema,
   homelandInputSchema,
   changeRequestSchema,
+  placeInputSchema,
   relationInputSchema,
   roleCreateSchema,
   userCreateSchema,
@@ -99,4 +100,9 @@ test("düzeltme talebi yorum gerektirir", () => {
       .success,
     true,
   );
+});
+
+test("mekân adı doğrulanır", () => {
+  assert.equal(placeInputSchema.safeParse({ name: " " }).success, false);
+  assert.equal(placeInputSchema.safeParse({ name: "Bağdat" }).success, true);
 });
