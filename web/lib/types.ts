@@ -50,3 +50,31 @@ export type PersonPageResult = {
   pageCount: number;
 };
 
+export type RoleSummary = {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  isSystem: boolean;
+  isActive: boolean;
+  userCount: number;
+  permissionIds: string[];
+};
+
+export type PermissionSummary = {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+};
+
+export type ManagedUser = {
+  id: string;
+  username: string;
+  displayName: string;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+  roles: Pick<RoleSummary, "id" | "code" | "name">[];
+};

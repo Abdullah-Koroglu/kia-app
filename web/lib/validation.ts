@@ -64,6 +64,47 @@ export const relationInputSchema = z
     path: ["studentId"],
   });
 
+export const userCreateSchema = z.object({
+  username: z.string().trim().min(3).max(80),
+  displayName: z.string().trim().min(1).max(160),
+  password: z.string().min(10).max(256),
+  roleIds: z.array(z.string().uuid()).min(1),
+  mustChangePassword: z.boolean().optional().default(true),
+});
+
+export const userUpdateSchema = z.object({
+  username: z.string().trim().min(3).max(80),
+  displayName: z.string().trim().min(1).max(160),
+});
+
+export const userRolesSchema = z.object({
+  roleIds: z.array(z.string().uuid()),
+});
+
+export const passwordResetSchema = z.object({
+  password: z.string().min(10).max(256),
+  mustChangePassword: z.boolean().optional().default(true),
+});
+
+export const roleCreateSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(2)
+    .max(80)
+    .regex(/^[A-Z][A-Z0-9_]*$/),
+  name: z.string().trim().min(2).max(120),
+  description: nullableText,
+  permissionIds: z.array(z.string().uuid()),
+});
+
+export const roleUpdateSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  description: nullableText,
+  isActive: z.boolean(),
+  permissionIds: z.array(z.string().uuid()),
+});
+
 export function apiError(error: unknown) {
   if (error instanceof z.ZodError) {
     return Response.json(
@@ -105,4 +146,3 @@ export function apiError(error: unknown) {
     { status: 500 },
   );
 }
-

@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut } from "lucide-react";
+import { ClipboardCheck, ListTodo, LogOut, Shield, Users } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/client";
+import { hasPermission, PERMISSIONS } from "@/lib/permissions";
 import { Button } from "./ui/button";
 
-export function AppHeader({ username }: { username: string }) {
+export function AppHeader({
+  user,
+}: {
+  user: { username: string; displayName: string; permissions: string[] };
+}) {
   const [busy, setBusy] = useState(false);
 
   async function logout() {
@@ -37,10 +42,30 @@ export function AppHeader({ username }: { username: string }) {
           >
             Kişiler
           </Link>
+          {hasPermission(user.permissions, PERMISSIONS.ASSIGNMENT_VIEW_OWN) ? (
+            <Link href="/my-assignments" className="hidden items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground lg:flex">
+              <ListTodo className="size-4" /> Görevlerim
+            </Link>
+          ) : null}
+          {hasPermission(user.permissions, PERMISSIONS.USER_VIEW) ? (
+            <Link href="/admin/users" className="hidden items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground lg:flex">
+              <Users className="size-4" /> Kullanıcılar
+            </Link>
+          ) : null}
+          {hasPermission(user.permissions, PERMISSIONS.ROLE_VIEW) ? (
+            <Link href="/admin/roles" className="hidden items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground lg:flex">
+              <Shield className="size-4" /> Roller
+            </Link>
+          ) : null}
+          {hasPermission(user.permissions, PERMISSIONS.REVIEW_QUEUE_VIEW) ? (
+            <Link href="/reviews" className="hidden items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground lg:flex">
+              <ClipboardCheck className="size-4" /> Kontrol
+            </Link>
+          ) : null}
         </div>
         <div className="flex items-center gap-3">
           <span className="hidden text-sm text-muted-foreground sm:inline">
-            {username}
+            {user.displayName}
           </span>
           <Button
             variant="ghost"

@@ -24,7 +24,7 @@ Ana plan:
 |---|---|---:|---|
 | Faz 0 - Dokümantasyon ve kararlar | Tamamlandı | %100 | 2026-08-06 |
 | Faz 1 - RBAC ve kullanıcı güvenliği | Tamamlandı | %100 | 2026-08-06 |
-| Faz 2 - Kullanıcı yönetimi | Başlanmadı | %0 | 2026-08-06 |
+| Faz 2 - Kullanıcı yönetimi | Tamamlandı | %100 | 2026-08-06 |
 | Faz 3 - Görev yönetimi | Başlanmadı | %0 | 2026-08-06 |
 | Faz 4 - Görev bazlı veri yetkilendirmesi | Başlanmadı | %0 | 2026-08-06 |
 | Faz 5 - Memleket | Başlanmadı | %0 | 2026-08-06 |
@@ -60,6 +60,37 @@ Tamamlandı
   `16-20` olur.
 
 ## İlerleme kayıtları
+
+### 2026-08-06 - Faz 2 tamamlandı
+
+**Yapılanlar**
+
+- Kullanıcı listeleme, oluşturma ve profil güncelleme API'leri eklendi.
+- Çoklu rol atama, şifre sıfırlama ve aktif/pasif kullanıcı akışları eklendi.
+- Pasife alınan kullanıcının aktif session kayıtları sonlandırılıyor.
+- Kendi hesabını pasife alma ve son aktif yöneticiyi kaldırma/pasife alma
+  engellendi.
+- Özel rol oluşturma, rol permission'larını düzenleme ve rol aktifliği API'leri
+  eklendi.
+- Kullanıcı Yönetimi ve Roller/Yetkiler yönetim ekranları eklendi.
+- Header navigasyonu kullanıcının permission'larına göre genişletildi.
+- Kullanıcı ve rol form doğrulamaları test edildi.
+
+**Doğrulama**
+
+- `npm test`: 8/8 test başarılı.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı; yeni admin ve API route'ları üretildi.
+
+**Commit ve push**
+
+- Commit başlığı: `feat: implement user and role management`
+- Push hedefi: `origin/master`
+
+**Sonraki adım**
+
+- Faz 3: Görev/kapsam şeması, çakışma koruması, deadline-gecikme hesabı ve
+  yönetici/araştırmacı görev ekranları.
 
 ### 2026-08-06 - Faz 1 tamamlandı
 
@@ -150,14 +181,14 @@ Tamamlandı
 
 ### Faz 2 - Kullanıcı yönetimi
 
-- [ ] Kullanıcı liste/oluşturma/güncelleme API'leri
-- [ ] Rol atama API'si
-- [ ] Aktif/pasif kullanıcı akışı
-- [ ] Şifre sıfırlama
-- [ ] Kullanıcı yönetim ekranı
-- [ ] Navigasyon permission görünürlüğü
-- [ ] Audit ve testler
-- [ ] Commit ve push
+- [x] Kullanıcı liste/oluşturma/güncelleme API'leri
+- [x] Rol atama API'si
+- [x] Aktif/pasif kullanıcı akışı
+- [x] Şifre sıfırlama
+- [x] Kullanıcı yönetim ekranı
+- [x] Navigasyon permission görünürlüğü
+- [x] Audit ve testler
+- [x] Commit ve push
 
 ### Faz 3 - Görev yönetimi
 

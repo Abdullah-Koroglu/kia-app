@@ -3,6 +3,8 @@ import test from "node:test";
 import {
   personInputSchema,
   relationInputSchema,
+  roleCreateSchema,
+  userCreateSchema,
 } from "../lib/validation";
 
 test("geçerli kişi kaydını kabul eder", () => {
@@ -33,6 +35,26 @@ test("kişi kendisiyle ilişkilendirilemez", () => {
     methodId: 1,
     scopeId: 1,
     certaintyId: 1,
+  });
+  assert.equal(result.success, false);
+});
+
+test("kullanıcı en az bir rol ve güçlü şifreyle oluşturulur", () => {
+  const result = userCreateSchema.safeParse({
+    username: "arastirmaci",
+    displayName: "Araştırmacı",
+    password: "guclu-sifre-123",
+    roleIds: ["00000000-0000-4000-8000-000000000001"],
+  });
+  assert.equal(result.success, true);
+});
+
+test("özel rol kodu teknik formata uymalıdır", () => {
+  const result = roleCreateSchema.safeParse({
+    code: "özel rol",
+    name: "Özel Rol",
+    description: null,
+    permissionIds: [],
   });
   assert.equal(result.success, false);
 });

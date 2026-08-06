@@ -11,11 +11,10 @@ export default async function ProtectedLayout({
   const user = await requireUser();
   return (
     <>
-      <AppHeader username={user.username} />
+      <AppHeader user={user} />
       <main className="mx-auto max-w-[1500px] px-4 py-7 sm:px-6 sm:py-10">
         {children}
       </main>
     </>
   );
 }
-
