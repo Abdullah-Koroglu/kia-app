@@ -390,6 +390,16 @@ Kurallar:
 - Yeni memleket seçim formunda otomatik seçilir.
 - Memleket değişikliği kontrol versiyonunu artırır.
 
+### 10.1 Tarih alanları
+
+- Hicrî doğum ve vefat yılları tek nullable integer kolonda tutulur.
+- Miladî doğum ve vefat için bir ana, bir de nullable ikinci integer kolon vardır.
+- Kullanıcı Miladî alana `856` girerse ikinci kolon null kalır; `856-857`
+  girerse değerler iki kolona ayrılır.
+- İkinci Miladî yıl yalnızca birinci yılın ardışığı olabilir.
+- Tarih filtresi Hicrî yıl, birinci Miladî yıl ve ikinci Miladî yıl kolonlarını
+  birlikte tarar.
+
 ## 11. Kontrol ve onay modeli
 
 ### 11.1 Kontrol durumları

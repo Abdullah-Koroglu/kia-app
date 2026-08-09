@@ -71,6 +71,13 @@
       "when": 1786264056733,
       "tag": "0009_schema_homeland_places_dates",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786270858115,
+      "tag": "0010_numeric_years_with_gregorian_secondary",
+      "breakpoints": true
     }
   ]
 }

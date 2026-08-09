@@ -3,6 +3,10 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api } from "@/lib/client";
 import type { Person } from "@/lib/types";
+import {
+  formatGregorianYearInput,
+  parseGregorianYearInput,
+} from "@/lib/years";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -54,16 +58,22 @@ function draftFromPerson(person?: Person | null): PersonDraft {
     name: person.name,
     nameDescription: person.nameDescription ?? "",
     birthYearHijri: person.birthYearHijri?.toString() ?? "",
-    birthYearGregorian: person.birthYearGregorian?.toString() ?? "",
+    birthYearGregorian: formatGregorianYearInput(
+      person.birthYearGregorian,
+      person.birthYearGregorianSecondary,
+    ),
     deathYearHijri: person.deathYearHijri?.toString() ?? "",
-    deathYearGregorian: person.deathYearGregorian?.toString() ?? "",
+    deathYearGregorian: formatGregorianYearInput(
+      person.deathYearGregorian,
+      person.deathYearGregorianSecondary,
+    ),
     detailNote: person.detailNote ?? "",
     homelandId: person.homelandId ? String(person.homelandId) : "",
   };
 }
 
-function optionalText(value: string) {
-  return value.trim() || null;
+function optionalNumber(value: string) {
+  return value.trim() ? Number(value) : null;
 }
 
 export function PersonFormDialog({
@@ -109,14 +119,18 @@ export function PersonFormDialog({
     setBusy(true);
     setError("");
     try {
+      const birthGregorian = parseGregorianYearInput(draft.birthYearGregorian);
+      const deathGregorian = parseGregorianYearInput(draft.deathYearGregorian);
       const payload = {
         extSourceId: Number(draft.extSourceId),
         name: draft.name,
         nameDescription: draft.nameDescription || null,
-        birthYearHijri: optionalText(draft.birthYearHijri),
-        birthYearGregorian: optionalText(draft.birthYearGregorian),
-        deathYearHijri: optionalText(draft.deathYearHijri),
-        deathYearGregorian: optionalText(draft.deathYearGregorian),
+        birthYearHijri: optionalNumber(draft.birthYearHijri),
+        birthYearGregorian: birthGregorian.primary,
+        birthYearGregorianSecondary: birthGregorian.secondary,
+        deathYearHijri: optionalNumber(draft.deathYearHijri),
+        deathYearGregorian: deathGregorian.primary,
+        deathYearGregorianSecondary: deathGregorian.secondary,
         detailNote: draft.detailNote || null,
         homelandId: draft.homelandId ? Number(draft.homelandId) : null,
       };
@@ -230,7 +244,7 @@ export function PersonFormDialog({
               disabled={Boolean(person) && !canEditDetails}
             />
             <p className="-mt-2 text-xs text-muted-foreground sm:col-span-2">
-              Kesin yıl veya tarih ifadesi girebilirsiniz: 1000, 1000-1001, yaklaşık 1000.
+              Hicrî alanlara tek yıl; Miladî alanlara 856 veya 856-857 biçiminde yıl girin.
             </p>
             <div className="grid gap-2 sm:col-span-2">
               <Label>Memleket</Label>
@@ -307,10 +321,11 @@ function YearField({
       <Label htmlFor={id}>{label}</Label>
       <Input
         id={id}
-        type="text"
-        inputMode="text"
-        maxLength={40}
-        placeholder="Örn. 1000-1001"
+        type={id.includes("Gregorian") ? "text" : "number"}
+        inputMode={id.includes("Gregorian") ? "text" : "numeric"}
+        step={id.includes("Gregorian") ? undefined : "1"}
+        maxLength={id.includes("Gregorian") ? 21 : undefined}
+        placeholder={id.includes("Gregorian") ? "Örn. 856-857" : "Örn. 243"}
         disabled={disabled}
         value={value}
         onChange={(event) => onChange(event.target.value)}

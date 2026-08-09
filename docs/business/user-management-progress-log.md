@@ -62,6 +62,37 @@ Tamamlandı
 
 ## İlerleme kayıtları
 
+### 2026-08-09 - Sayısal tarih modeli ve ikinci Miladî yıl
+
+**Yapılanlar**
+
+- Önceki serbest metin tarih yaklaşımı yeni gereksinim doğrultusunda kaldırıldı.
+- Hicrî doğum/vefat alanları yeniden tek integer yıl olarak tanımlandı.
+- Miladî doğum ve vefat alanlarına nullable ikinci integer yıl kolonları eklendi.
+- Miladî form alanı `856` veya `856-857` kabul ediyor; tireli değer iki sayısal
+  kolona ayrılıyor ve gösterimde yeniden aynı biçimde birleştiriliyor.
+- İkinci Miladî yılın ilk yıldan tam bir yıl sonra olması hem API hem veritabanı
+  constraint'iyle zorunlu tutuldu.
+- Tarih filtresi ikinci Miladî yıl kolonlarını da kapsayacak şekilde güncellendi.
+- String tarihleri sayısal modele dönüştüren ve uyumsuz veri varsa veri kaybetmeden
+  migrationı durduran `0010` migrationı eklendi.
+
+**Doğrulama**
+
+- `npm test`: 17/17 test başarılı; tek yıl, tireli yıl ve geçersiz Miladî
+  giriş ayrıştırması ayrıca test edildi.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı.
+- İzole PostgreSQL 16 üzerinde `243 H / 856-857 M` örneği eski string şemadan
+  geçirildi; bütün tarih kolonlarının integer olduğu, ikinci yılın `857` olarak
+  ayrıldığı ve `857` filtresinin kaydı bulduğu doğrulandı.
+- Geçici doğrulama container'ı kaldırıldı.
+
+**Commit ve push**
+
+- Planlanan commit başlığı: `fix: store scholar years as filterable numbers`
+- Push hedefi: `origin/master`
+
 ### 2026-08-09 - Ortak mekân sözlüğü ve esnek tarih ifadeleri
 
 **Yapılanlar**

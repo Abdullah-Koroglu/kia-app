@@ -3,10 +3,12 @@ export type Person = {
   extSourceId: number;
   name: string;
   nameDescription: string | null;
-  birthYearHijri: string | null;
-  birthYearGregorian: string | null;
-  deathYearHijri: string | null;
-  deathYearGregorian: string | null;
+  birthYearHijri: number | null;
+  birthYearGregorian: number | null;
+  birthYearGregorianSecondary: number | null;
+  deathYearHijri: number | null;
+  deathYearGregorian: number | null;
+  deathYearGregorianSecondary: number | null;
   detailNote: string | null;
   homelandId?: number | null;
   homelandName?: string | null;

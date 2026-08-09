@@ -1,13 +1,9 @@
 import { z } from "zod";
 
-const nullableYearExpression = z
-  .union([z.string().trim().min(1).max(40), z.number().int().transform(String), z.null()])
+const nullableYear = z
+  .union([z.number().int(), z.null()])
   .optional()
   .transform((value) => value ?? null);
-
-function exactYear(value: string | null) {
-  return value !== null && /^-?\d+$/.test(value) ? Number(value) : null;
-}
 
 const nullableText = z
   .union([z.string().trim().max(10_000), z.null()])
@@ -19,10 +15,12 @@ export const personInputSchema = z
     extSourceId: z.number().int(),
     name: z.string().trim().min(1).max(180),
     nameDescription: nullableText,
-    birthYearHijri: nullableYearExpression,
-    birthYearGregorian: nullableYearExpression,
-    deathYearHijri: nullableYearExpression,
-    deathYearGregorian: nullableYearExpression,
+    birthYearHijri: nullableYear,
+    birthYearGregorian: nullableYear,
+    birthYearGregorianSecondary: nullableYear,
+    deathYearHijri: nullableYear,
+    deathYearGregorian: nullableYear,
+    deathYearGregorianSecondary: nullableYear,
     detailNote: nullableText,
     homelandId: z
       .union([z.number().int().positive(), z.null()])
@@ -30,9 +28,11 @@ export const personInputSchema = z
       .transform((value) => value ?? null),
   })
   .superRefine((data, context) => {
-    const birthHijri = exactYear(data.birthYearHijri);
-    const deathHijri = exactYear(data.deathYearHijri);
-    if (birthHijri !== null && deathHijri !== null && deathHijri < birthHijri) {
+    if (
+      data.birthYearHijri !== null &&
+      data.deathYearHijri !== null &&
+      data.deathYearHijri < data.birthYearHijri
+    ) {
       context.addIssue({
         code: "custom",
         path: ["deathYearHijri"],
@@ -40,18 +40,30 @@ export const personInputSchema = z
       });
     }
 
-    const birthGregorian = exactYear(data.birthYearGregorian);
-    const deathGregorian = exactYear(data.deathYearGregorian);
     if (
-      birthGregorian !== null &&
-      deathGregorian !== null &&
-      deathGregorian < birthGregorian
+      data.birthYearGregorian !== null &&
+      data.deathYearGregorian !== null &&
+      data.deathYearGregorian < data.birthYearGregorian
     ) {
       context.addIssue({
         code: "custom",
         path: ["deathYearGregorian"],
         message: "Kesin Miladî vefat yılı doğum yılından küçük olamaz.",
       });
+    }
+    for (const [primaryKey, secondaryKey] of [
+      ["birthYearGregorian", "birthYearGregorianSecondary"],
+      ["deathYearGregorian", "deathYearGregorianSecondary"],
+    ] as const) {
+      const primary = data[primaryKey];
+      const secondary = data[secondaryKey];
+      if (secondary !== null && (primary === null || secondary !== primary + 1)) {
+        context.addIssue({
+          code: "custom",
+          path: [secondaryKey],
+          message: "İkinci Miladî yıl ilk yıldan bir sonraki yıl olmalıdır.",
+        });
+      }
     }
   });
 

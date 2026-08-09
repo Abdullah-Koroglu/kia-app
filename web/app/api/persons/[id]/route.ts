@@ -15,8 +15,10 @@ async function getPerson(id: string) {
       name_description as "nameDescription",
       birth_year_hijri as "birthYearHijri",
       birth_year_gregorian as "birthYearGregorian",
+      birth_year_gregorian_secondary as "birthYearGregorianSecondary",
       death_year_hijri as "deathYearHijri",
       death_year_gregorian as "deathYearGregorian",
+      death_year_gregorian_secondary as "deathYearGregorianSecondary",
       detail_note as "detailNote",
       homeland_id as "homelandId",
       (select pl.name from places pl where pl.id = persons.homeland_id) as "homelandName",
@@ -152,8 +154,10 @@ export async function PATCH(request: Request, route: RouteContext) {
           name_description as "nameDescription",
           birth_year_hijri as "birthYearHijri",
           birth_year_gregorian as "birthYearGregorian",
+          birth_year_gregorian_secondary as "birthYearGregorianSecondary",
           death_year_hijri as "deathYearHijri",
           death_year_gregorian as "deathYearGregorian",
+          death_year_gregorian_secondary as "deathYearGregorianSecondary",
           detail_note as "detailNote"
           ,homeland_id as "homelandId"
           ,review_status as "reviewStatus"
@@ -198,8 +202,10 @@ export async function PATCH(request: Request, route: RouteContext) {
           "nameDescription",
           "birthYearHijri",
           "birthYearGregorian",
+          "birthYearGregorianSecondary",
           "deathYearHijri",
           "deathYearGregorian",
+          "deathYearGregorianSecondary",
           "detailNote",
           "homelandId",
         ].every((field) => (before[field] ?? null) === (input[field as keyof typeof input] ?? null));
@@ -217,8 +223,10 @@ export async function PATCH(request: Request, route: RouteContext) {
           name_description = ${input.nameDescription},
           birth_year_hijri = ${input.birthYearHijri},
           birth_year_gregorian = ${input.birthYearGregorian},
+          birth_year_gregorian_secondary = ${input.birthYearGregorianSecondary},
           death_year_hijri = ${input.deathYearHijri},
           death_year_gregorian = ${input.deathYearGregorian},
+          death_year_gregorian_secondary = ${input.deathYearGregorianSecondary},
           detail_note = ${input.detailNote},
           homeland_id = ${input.homelandId},
           updated_by_user_id = ${auth.user.id},
@@ -237,8 +245,10 @@ export async function PATCH(request: Request, route: RouteContext) {
           name_description as "nameDescription",
           birth_year_hijri as "birthYearHijri",
           birth_year_gregorian as "birthYearGregorian",
+          birth_year_gregorian_secondary as "birthYearGregorianSecondary",
           death_year_hijri as "deathYearHijri",
           death_year_gregorian as "deathYearGregorian",
+          death_year_gregorian_secondary as "deathYearGregorianSecondary",
           detail_note as "detailNote"
           ,homeland_id as "homelandId"
           ,review_status as "reviewStatus"
@@ -281,8 +291,10 @@ export async function DELETE(request: Request, route: RouteContext) {
           name_description as "nameDescription",
           birth_year_hijri as "birthYearHijri",
           birth_year_gregorian as "birthYearGregorian",
+          birth_year_gregorian_secondary as "birthYearGregorianSecondary",
           death_year_hijri as "deathYearHijri",
           death_year_gregorian as "deathYearGregorian",
+          death_year_gregorian_secondary as "deathYearGregorianSecondary",
           detail_note as "detailNote"
           ,homeland_id as "homelandId"
         from persons where id = ${id} for update

@@ -250,10 +250,18 @@ export function PersonsClient() {
                   {person.nameDescription || "—"}
                 </TableCell>
                 <TableCell>
-                  {yearLabel(person.birthYearHijri, person.birthYearGregorian)}
+                  {yearLabel(
+                    person.birthYearHijri,
+                    person.birthYearGregorian,
+                    person.birthYearGregorianSecondary,
+                  )}
                 </TableCell>
                 <TableCell>
-                  {yearLabel(person.deathYearHijri, person.deathYearGregorian)}
+                  {yearLabel(
+                    person.deathYearHijri,
+                    person.deathYearGregorian,
+                    person.deathYearGregorianSecondary,
+                  )}
                 </TableCell>
                 <TableCell>{person.homelandName || "—"}</TableCell>
                 <TableCell>

@@ -29,10 +29,12 @@ Kıraat ağındaki kişiyi temsil eder.
 | `extSourceId` | Evet | Çalışılan dış kaynaktaki integer kişi ID'si |
 | `name` | Evet | Ağda ve listelerde gösterilecek kısa kişi adı |
 | `nameDescription` | Hayır | Tam isim, künye, nisbe, lakap veya ayırt edici isim açıklaması |
-| `birthYearHijri` | Hayır | Hicrî doğum yılı veya tarih ifadesi |
-| `birthYearGregorian` | Hayır | Miladî doğum yılı veya tarih ifadesi |
-| `deathYearHijri` | Hayır | Hicrî vefat yılı veya tarih ifadesi |
-| `deathYearGregorian` | Hayır | Miladî vefat yılı veya tarih ifadesi |
+| `birthYearHijri` | Hayır | Tek integer Hicrî doğum yılı |
+| `birthYearGregorian` | Hayır | Birinci Miladî doğum yılı |
+| `birthYearGregorianSecondary` | Hayır | Hicrî yıl iki Miladî yıla denk geliyorsa ikinci yıl |
+| `deathYearHijri` | Hayır | Tek integer Hicrî vefat yılı |
+| `deathYearGregorian` | Hayır | Birinci Miladî vefat yılı |
+| `deathYearGregorianSecondary` | Hayır | Hicrî yıl iki Miladî yıla denk geliyorsa ikinci yıl |
 | `homelandId` | Hayır | Memleket olarak seçilen `Place.id` |
 | `detailNote` | Hayır | Kişi hakkında serbest ve ayrıntılı açıklama |
 | `createdAt` | Sistem | Kaydın oluşturulma zamanı |
@@ -50,7 +52,10 @@ Kıraat ağındaki kişiyi temsil eder.
 - `nameDescription` ayrıntılı isim bilgisidir. Örnek:
   `Âsım b. Ebî'n-Necûd, Ebû Bekir, el-Kûfî`.
 - Doğum ve vefat bilgileri bilinmiyorsa boş bırakılabilir.
-- Tarih alanları `1000`, `1000-1001` veya `yaklaşık 1000` gibi ifadeleri kabul eder.
+- Hicrî tarih alanları yalnızca tek integer yıl kabul eder.
+- Miladî tarih ekranda `856` veya `856-857` olarak girilir; veritabanında iki
+  nullable integer kolona ayrılır.
+- İkinci Miladî yıl varsa birinci yıldan tam bir yıl sonra olmalıdır.
 - Memleket, ilişki mekânlarıyla aynı `places` tablosundan seçilir ve kişi başına
   en fazla bir tane olabilir.
 

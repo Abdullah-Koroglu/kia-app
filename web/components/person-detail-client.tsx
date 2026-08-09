@@ -292,6 +292,7 @@ export function PersonDetailClient({ personId }: { personId: string }) {
             value={yearLabel(
               detail.person.birthYearHijri,
               detail.person.birthYearGregorian,
+              detail.person.birthYearGregorianSecondary,
             )}
           />
           <Info
@@ -299,6 +300,7 @@ export function PersonDetailClient({ personId }: { personId: string }) {
             value={yearLabel(
               detail.person.deathYearHijri,
               detail.person.deathYearGregorian,
+              detail.person.deathYearGregorianSecondary,
             )}
           />
           <Info label="Memleket" value={detail.person.homelandName} />

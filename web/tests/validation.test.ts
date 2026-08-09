@@ -20,22 +20,33 @@ test("geçerli kişi kaydını kabul eder", () => {
   assert.equal(result.success, true);
 });
 
-test("kişi tarih alanları yıl aralığı ve yaklaşık ifade kabul eder", () => {
+test("Miladî tarih ardışık ikinci yılı kabul eder", () => {
   const result = personInputSchema.safeParse({
     extSourceId: 125,
     name: "Âsım",
-    birthYearHijri: "1000-1001",
-    deathYearHijri: "yaklaşık 1080",
+    birthYearHijri: 243,
+    birthYearGregorian: 856,
+    birthYearGregorianSecondary: 857,
   });
   assert.equal(result.success, true);
 });
 
-test("iki kesin yıl girildiğinde vefat doğumdan önce olamaz", () => {
+test("ardışık olmayan ikinci Miladî yıl kabul edilmez", () => {
   const result = personInputSchema.safeParse({
     extSourceId: 125,
     name: "Âsım",
-    birthYearHijri: "190",
-    deathYearHijri: "120",
+    birthYearGregorian: 856,
+    birthYearGregorianSecondary: 858,
+  });
+  assert.equal(result.success, false);
+});
+
+test("vefat yılı doğumdan önce olamaz", () => {
+  const result = personInputSchema.safeParse({
+    extSourceId: 125,
+    name: "Âsım",
+    birthYearHijri: 190,
+    deathYearHijri: 120,
   });
   assert.equal(result.success, false);
 });

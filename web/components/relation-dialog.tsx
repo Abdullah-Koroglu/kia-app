@@ -63,8 +63,10 @@ export function RelationDialog({
             nameDescription: relation.counterpartDescription,
             birthYearHijri: null,
             birthYearGregorian: null,
+            birthYearGregorianSecondary: null,
             deathYearHijri: null,
             deathYearGregorian: null,
+            deathYearGregorianSecondary: null,
             detailNote: null,
           }
         : null,

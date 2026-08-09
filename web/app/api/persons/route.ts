@@ -18,8 +18,8 @@ export async function GET(request: Request) {
   const normalizedQuery = normalizeSearchText(q);
   const teacherId = params.get("teacherId");
   const studentId = params.get("studentId");
-  const birthYear = params.get("birthYear")?.trim() || null;
-  const deathYear = params.get("deathYear")?.trim() || null;
+  const birthYear = Number(params.get("birthYear")) || null;
+  const deathYear = Number(params.get("deathYear")) || null;
   const compact = params.get("compact") === "true";
   const isManager = auth.user.roles.includes(ROLE_CODES.MANAGER);
   const requestedPage = Math.max(1, Number(params.get("page")) || 1);
@@ -55,10 +55,18 @@ export async function GET(request: Request) {
       )`
     : sql``;
   const birthCondition = birthYear
-    ? sql`and (p.birth_year_hijri ilike '%' || ${birthYear} || '%' or p.birth_year_gregorian ilike '%' || ${birthYear} || '%')`
+    ? sql`and (
+        p.birth_year_hijri = ${birthYear}
+        or p.birth_year_gregorian = ${birthYear}
+        or p.birth_year_gregorian_secondary = ${birthYear}
+      )`
     : sql``;
   const deathCondition = deathYear
-    ? sql`and (p.death_year_hijri ilike '%' || ${deathYear} || '%' or p.death_year_gregorian ilike '%' || ${deathYear} || '%')`
+    ? sql`and (
+        p.death_year_hijri = ${deathYear}
+        or p.death_year_gregorian = ${deathYear}
+        or p.death_year_gregorian_secondary = ${deathYear}
+      )`
     : sql``;
 
   const where = sql`
@@ -79,8 +87,10 @@ export async function GET(request: Request) {
         p.name_description as "nameDescription",
         p.birth_year_hijri as "birthYearHijri",
         p.birth_year_gregorian as "birthYearGregorian",
+        p.birth_year_gregorian_secondary as "birthYearGregorianSecondary",
         p.death_year_hijri as "deathYearHijri",
         p.death_year_gregorian as "deathYearGregorian",
+        p.death_year_gregorian_secondary as "deathYearGregorianSecondary",
         p.detail_note as "detailNote"
         ,p.homeland_id as "homelandId"
         ,(select pl.name from places pl where pl.id = p.homeland_id) as "homelandName"
@@ -171,12 +181,16 @@ export async function POST(request: Request) {
         insert into persons (
           ext_source_id, name, name_description,
           birth_year_hijri, birth_year_gregorian,
-          death_year_hijri, death_year_gregorian, detail_note, homeland_id,
+          birth_year_gregorian_secondary,
+          death_year_hijri, death_year_gregorian,
+          death_year_gregorian_secondary, detail_note, homeland_id,
           created_by_user_id, created_under_assignment_id, updated_by_user_id
         ) values (
           ${input.extSourceId}, ${input.name}, ${input.nameDescription},
           ${input.birthYearHijri}, ${input.birthYearGregorian},
-          ${input.deathYearHijri}, ${input.deathYearGregorian}, ${input.detailNote},
+          ${input.birthYearGregorianSecondary},
+          ${input.deathYearHijri}, ${input.deathYearGregorian},
+          ${input.deathYearGregorianSecondary}, ${input.detailNote},
           ${input.homelandId},
           ${auth.user.id}, ${assignmentId}, ${auth.user.id}
         )
@@ -185,8 +199,10 @@ export async function POST(request: Request) {
           name_description as "nameDescription",
           birth_year_hijri as "birthYearHijri",
           birth_year_gregorian as "birthYearGregorian",
+          birth_year_gregorian_secondary as "birthYearGregorianSecondary",
           death_year_hijri as "deathYearHijri",
           death_year_gregorian as "deathYearGregorian",
+          death_year_gregorian_secondary as "deathYearGregorianSecondary",
           detail_note as "detailNote"
           ,homeland_id as "homelandId"
       `;

@@ -276,10 +276,12 @@ export const persons = pgTable(
     extSourceId: integer("ext_source_id").notNull(),
     name: varchar("name", { length: 180 }).notNull(),
     nameDescription: text("name_description"),
-    birthYearHijri: varchar("birth_year_hijri", { length: 40 }),
-    birthYearGregorian: varchar("birth_year_gregorian", { length: 40 }),
-    deathYearHijri: varchar("death_year_hijri", { length: 40 }),
-    deathYearGregorian: varchar("death_year_gregorian", { length: 40 }),
+    birthYearHijri: integer("birth_year_hijri"),
+    birthYearGregorian: integer("birth_year_gregorian"),
+    birthYearGregorianSecondary: integer("birth_year_gregorian_secondary"),
+    deathYearHijri: integer("death_year_hijri"),
+    deathYearGregorian: integer("death_year_gregorian"),
+    deathYearGregorianSecondary: integer("death_year_gregorian_secondary"),
     detailNote: text("detail_note"),
     homelandId: integer("homeland_id").references(() => places.id, {
       onDelete: "set null",
@@ -322,6 +324,22 @@ export const persons = pgTable(
     ),
     index("persons_created_under_assignment_idx").on(
       table.createdUnderAssignmentId,
+    ),
+    check(
+      "persons_birth_gregorian_secondary_ck",
+      sql`${table.birthYearGregorianSecondary} is null or (${table.birthYearGregorian} is not null and ${table.birthYearGregorianSecondary} = ${table.birthYearGregorian} + 1)`,
+    ),
+    check(
+      "persons_death_gregorian_secondary_ck",
+      sql`${table.deathYearGregorianSecondary} is null or (${table.deathYearGregorian} is not null and ${table.deathYearGregorianSecondary} = ${table.deathYearGregorian} + 1)`,
+    ),
+    check(
+      "persons_hijri_year_order_ck",
+      sql`${table.birthYearHijri} is null or ${table.deathYearHijri} is null or ${table.deathYearHijri} >= ${table.birthYearHijri}`,
+    ),
+    check(
+      "persons_gregorian_year_order_ck",
+      sql`${table.birthYearGregorian} is null or ${table.deathYearGregorian} is null or ${table.deathYearGregorian} >= ${table.birthYearGregorian}`,
     ),
   ],
 );
