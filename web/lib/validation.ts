@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+z.config(z.locales.tr());
+
 const nullableYear = z
   .union([z.number().int(), z.null()])
   .optional()

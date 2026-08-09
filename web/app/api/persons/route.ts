@@ -8,6 +8,15 @@ import { hasPermission, PERMISSIONS, ROLE_CODES } from "@/lib/permissions";
 import { apiError, personInputSchema } from "@/lib/validation";
 
 const PAGE_SIZE = 50;
+const SORT_KEYS = new Set([
+  "extSourceId",
+  "name",
+  "nameDescription",
+  "birth",
+  "death",
+  "homeland",
+  "reviewStatus",
+]);
 
 export async function GET(request: Request) {
   const auth = await requireApiPermission(PERMISSIONS.PERSON_VIEW);
@@ -21,8 +30,9 @@ export async function GET(request: Request) {
   const birthYear = Number(params.get("birthYear")) || null;
   const deathYear = Number(params.get("deathYear")) || null;
   const compact = params.get("compact") === "true";
-  const sortBy = params.get("sortBy") ?? "extSourceId";
-  const sortDirection = params.get("sortOrder") === "desc" ? sql`desc` : sql`asc`;
+  const requestedSortBy = params.get("sortBy") ?? "extSourceId";
+  const sortBy = SORT_KEYS.has(requestedSortBy) ? requestedSortBy : "extSourceId";
+  const sortOrder = params.get("sortOrder") === "desc" ? "desc" : "asc";
   const isManager = auth.user.roles.includes(ROLE_CODES.MANAGER);
   const requestedPage = Math.max(1, Number(params.get("page")) || 1);
   const pageSize = compact ? 20 : PAGE_SIZE;
@@ -40,25 +50,6 @@ export async function GET(request: Request) {
         )
       `
     : sql``;
-  const exactOrder =
-    numericQuery !== null
-      ? sql`case when p.ext_source_id = ${numericQuery} then 0 else 1 end`
-      : sql`1`;
-  const sortExpressions: Record<string, ReturnType<typeof sql>> = {
-    extSourceId: sql`p.ext_source_id`,
-    name: sql`translate(unaccent(lower(p.name)), 'ı', 'i')`,
-    nameDescription: sql`translate(unaccent(lower(p.name_description)), 'ı', 'i')`,
-    birth: sql`coalesce(p.birth_year_gregorian, p.birth_year_hijri)`,
-    death: sql`coalesce(p.death_year_gregorian, p.death_year_hijri)`,
-    homeland: sql`(select translate(unaccent(lower(pl.name)), 'ı', 'i') from places pl where pl.id = p.homeland_id)`,
-    reviewStatus: sql`case p.review_status
-      when 'NOT_READY' then 1
-      when 'CHANGES_REQUESTED' then 2
-      when 'READY_FOR_REVIEW' then 3
-      when 'APPROVED' then 4
-      else 5 end`,
-  };
-  const sortExpression = sortExpressions[sortBy] ?? sortExpressions.extSourceId;
   const teacherCondition = teacherId
     ? sql`and exists (
         select 1 from relations r
@@ -119,8 +110,21 @@ export async function GET(request: Request) {
       from persons p
       ${where}
       order by
-        ${exactOrder},
-        ${sortExpression} ${sortDirection} nulls last,
+        case when ${numericQuery !== null} and p.ext_source_id = ${numericQuery ?? 0} then 0 else 1 end,
+        case when ${sortBy} = 'extSourceId' and ${sortOrder} = 'asc' then p.ext_source_id end asc nulls last,
+        case when ${sortBy} = 'extSourceId' and ${sortOrder} = 'desc' then p.ext_source_id end desc nulls last,
+        case when ${sortBy} = 'name' and ${sortOrder} = 'asc' then translate(unaccent(lower(p.name)), 'ı', 'i') end asc nulls last,
+        case when ${sortBy} = 'name' and ${sortOrder} = 'desc' then translate(unaccent(lower(p.name)), 'ı', 'i') end desc nulls last,
+        case when ${sortBy} = 'nameDescription' and ${sortOrder} = 'asc' then translate(unaccent(lower(p.name_description)), 'ı', 'i') end asc nulls last,
+        case when ${sortBy} = 'nameDescription' and ${sortOrder} = 'desc' then translate(unaccent(lower(p.name_description)), 'ı', 'i') end desc nulls last,
+        case when ${sortBy} = 'birth' and ${sortOrder} = 'asc' then coalesce(p.birth_year_gregorian, p.birth_year_hijri) end asc nulls last,
+        case when ${sortBy} = 'birth' and ${sortOrder} = 'desc' then coalesce(p.birth_year_gregorian, p.birth_year_hijri) end desc nulls last,
+        case when ${sortBy} = 'death' and ${sortOrder} = 'asc' then coalesce(p.death_year_gregorian, p.death_year_hijri) end asc nulls last,
+        case when ${sortBy} = 'death' and ${sortOrder} = 'desc' then coalesce(p.death_year_gregorian, p.death_year_hijri) end desc nulls last,
+        case when ${sortBy} = 'homeland' and ${sortOrder} = 'asc' then (select translate(unaccent(lower(pl.name)), 'ı', 'i') from places pl where pl.id = p.homeland_id) end asc nulls last,
+        case when ${sortBy} = 'homeland' and ${sortOrder} = 'desc' then (select translate(unaccent(lower(pl.name)), 'ı', 'i') from places pl where pl.id = p.homeland_id) end desc nulls last,
+        case when ${sortBy} = 'reviewStatus' and ${sortOrder} = 'asc' then case p.review_status when 'NOT_READY' then 1 when 'CHANGES_REQUESTED' then 2 when 'READY_FOR_REVIEW' then 3 when 'APPROVED' then 4 else 5 end end asc,
+        case when ${sortBy} = 'reviewStatus' and ${sortOrder} = 'desc' then case p.review_status when 'NOT_READY' then 1 when 'CHANGES_REQUESTED' then 2 when 'READY_FOR_REVIEW' then 3 when 'APPROVED' then 4 else 5 end end desc,
         p.ext_source_id asc
       limit ${pageSize} offset ${offset}
     `,

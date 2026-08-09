@@ -17,7 +17,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/client";
 import type { Person, PersonPageResult } from "@/lib/types";
 import { yearLabel } from "@/lib/utils";
@@ -95,8 +95,10 @@ export function PersonsClient() {
   const [deleting, setDeleting] = useState<Person | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [reviewBusyId, setReviewBusyId] = useState<string | null>(null);
+  const loadRequestId = useRef(0);
 
   const load = useCallback(async () => {
+    const requestId = ++loadRequestId.current;
     setLoading(true);
     setMessage("");
     const params = new URLSearchParams({
@@ -111,11 +113,14 @@ export function PersonsClient() {
     if (deathYear) params.set("deathYear", deathYear);
 
     try {
-      setData(await api<PersonPageResult>(`/api/persons?${params}`));
+      const result = await api<PersonPageResult>(`/api/persons?${params}`);
+      if (requestId === loadRequestId.current) setData(result);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Liste yüklenemedi.");
+      if (requestId === loadRequestId.current) {
+        setMessage(error instanceof Error ? error.message : "Liste yüklenemedi.");
+      }
     } finally {
-      setLoading(false);
+      if (requestId === loadRequestId.current) setLoading(false);
     }
   }, [page, query, teacher, student, birthYear, deathYear, sortBy, sortOrder]);
 

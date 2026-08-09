@@ -62,6 +62,35 @@ Tamamlandı
 
 ## İlerleme kayıtları
 
+### 2026-08-09 - Alan bazlı doğrulama toastları ve sıralama düzeltmesi
+
+**Yapılanlar**
+
+- API'nin `fields` doğrulama ayrıntıları istemcide korunuyor; her hatalı alan
+  Türkçe etiketi ve kendi açıklamasıyla ayrı hata toastı gösteriyor.
+- Genel `Form alanlarını kontrol edin` mesajı yerine ilk alanın ayrıntılı mesajı
+  form içinde de gösteriliyor.
+- Zod'un Türkçe hata yerelleştirmesi etkinleştirildi ve global Sonner toast
+  katmanı eklendi.
+- Âlim liste sıralamasını etkisiz bırakan iç içe SQL sıralama parçası kaldırıldı;
+  kolon ve yön seçimleri parametreli sabit `CASE` sıralamalarına çevrildi.
+- Art arda liste isteklerinde eski cevabın yeni sıralamayı ezmesi istek sıra
+  numarasıyla engellendi.
+
+**Doğrulama**
+
+- `npm test`: 17/17 test başarılı.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı.
+- İzole PostgreSQL ve production Next sunucusunda uçtan uca API testi yapıldı:
+  ID artan `10,20,30`, ID azalan `30,20,10`, isim artan `Alpha,Mike,Zulu`.
+- Geçici Next süreci ve PostgreSQL container'ı kaldırıldı.
+
+**Commit ve push**
+
+- Planlanan commit başlığı: `fix: show field errors and restore scholar sorting`
+- Push hedefi: `origin/master`
+
 ### 2026-08-09 - Arayüz terminolojisi âlim olarak birleştirildi
 
 **Yapılanlar**
