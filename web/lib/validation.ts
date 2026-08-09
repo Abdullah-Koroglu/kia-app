@@ -173,7 +173,10 @@ export const placeInputSchema = z.object({
 });
 
 export const reviewCommentSchema = z.object({
-  comment: z.string().trim().max(10_000).optional().transform((value) => value || null),
+  comment: z
+    .union([z.string().trim().max(10_000), z.null()])
+    .optional()
+    .transform((value) => value || null),
 });
 
 export const changeRequestSchema = z.object({

@@ -62,6 +62,27 @@ Tamamlandı
 
 ## İlerleme kayıtları
 
+### 2026-08-09 - Onay notu opsiyonel hale getirildi
+
+**Yapılanlar**
+
+- Kontrol formunda âlim onaylanırken not gönderme zorunluluğu kaldırıldı.
+- API doğrulaması eksik, boş veya `null` onay notunu kabul edecek şekilde
+  güncellendi.
+- Düzeltme talebinde açıklama girme zorunluluğu korundu.
+- Opsiyonel onay notu davranışı regresyon testiyle güvence altına alındı.
+
+**Doğrulama**
+
+- `npm test`: 18/18 test başarılı.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı.
+
+**Commit ve push**
+
+- Planlanan commit başlığı: `fix: make approval note optional`
+- Push hedefi: `origin/master`
+
 ### 2026-08-09 - Alan bazlı doğrulama toastları ve sıralama düzeltmesi
 
 **Yapılanlar**

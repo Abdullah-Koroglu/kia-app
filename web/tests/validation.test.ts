@@ -6,6 +6,7 @@ import {
   changeRequestSchema,
   placeInputSchema,
   relationInputSchema,
+  reviewCommentSchema,
   roleCreateSchema,
   userCreateSchema,
 } from "../lib/validation";
@@ -115,6 +116,12 @@ test("düzeltme talebi yorum gerektirir", () => {
       .success,
     true,
   );
+});
+
+test("onay notu opsiyoneldir", () => {
+  assert.equal(reviewCommentSchema.safeParse({}).success, true);
+  assert.equal(reviewCommentSchema.safeParse({ comment: "" }).success, true);
+  assert.equal(reviewCommentSchema.safeParse({ comment: null }).success, true);
 });
 
 test("mekân adı doğrulanır", () => {
