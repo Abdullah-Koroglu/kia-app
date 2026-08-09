@@ -1,6 +1,6 @@
 # Kıraat Ağı
 
-Kıraat araştırmacılarının kişileri ve yönlü hoca-talebe ilişkilerini
+Kıraat araştırmacılarının âlimleri ve yönlü hoca-talebe ilişkilerini
 kaydettiği, aradığı ve filtrelediği full-stack Next.js uygulaması.
 
 ## Gereksinimler

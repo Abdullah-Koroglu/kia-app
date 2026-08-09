@@ -173,11 +173,11 @@ export function PersonFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{person ? "Kişiyi düzenle" : "Yeni kişi"}</DialogTitle>
+          <DialogTitle>{person ? "Âlimi düzenle" : "Yeni âlim"}</DialogTitle>
           <DialogDescription>
             {person && !canEditDetails
               ? "Yönetici olarak yalnızca dış kaynak ID değerini değiştirebilirsiniz."
-              : "Araştırma kaynağındaki temel kişi bilgilerini girin."}
+              : "Araştırma kaynağındaki temel âlim bilgilerini girin."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit}>

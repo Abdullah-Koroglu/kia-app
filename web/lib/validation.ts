@@ -81,7 +81,7 @@ export const relationInputSchema = z
     detailNote: nullableText,
   })
   .refine((data) => data.teacherId !== data.studentId, {
-    message: "Bir kişi kendisinin hocası veya talebesi olamaz.",
+    message: "Bir âlim kendisinin hocası veya talebesi olamaz.",
     path: ["studentId"],
   });
 

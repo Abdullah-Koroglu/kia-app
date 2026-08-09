@@ -62,6 +62,32 @@ Tamamlandı
 
 ## İlerleme kayıtları
 
+### 2026-08-09 - Arayüz terminolojisi âlim olarak birleştirildi
+
+**Yapılanlar**
+
+- Kullanıcıya görünen bütün `kişi/kişiler` ifadeleri bağlama uygun biçimde
+  `âlim/âlimler` olarak değiştirildi.
+- Navigasyon, liste, sayaç, form, detay, seçim, ilişki ve mekân ekranlarındaki
+  başlık, açıklama, boş durum ve onay metinleri güncellendi.
+- API'den arayüze dönen bulunamadı hata mesajları ve sayfa metadata başlıkları
+  aynı terminolojiye geçirildi.
+- Teknik `Person` tipleri, veritabanı tabloları ve `/api/persons` adresleri geriye
+  dönük uyumluluk için değiştirilmedi.
+
+**Doğrulama**
+
+- Arayüz/API mesajı kaynaklarında büyük-küçük harf duyarsız taramada kullanıcıya
+  görünen `kişi` ifadesi kalmadığı doğrulandı.
+- `npm test`: 17/17 test başarılı.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı.
+
+**Commit ve push**
+
+- Planlanan commit başlığı: `refactor: rename person labels to scholars`
+- Push hedefi: `origin/master`
+
 ### 2026-08-09 - Âlim listesi kontrol renkleri ve tablo etkileşimleri
 
 **Yapılanlar**

@@ -40,7 +40,7 @@ export function AppHeader({
             href="/persons"
             className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:block"
           >
-            Kişiler
+            Âlimler
           </Link>
           {hasPermission(user.permissions, PERMISSIONS.ASSIGNMENT_VIEW_OWN) ? (
             <Link href="/my-assignments" className="hidden items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground lg:flex">

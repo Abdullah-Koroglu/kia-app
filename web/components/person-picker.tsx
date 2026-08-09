@@ -108,7 +108,7 @@ export function PersonPicker({
           <CommandList>
             <CommandEmpty>
               {query.trim()
-                ? "Eşleşen kişi bulunamadı."
+                ? "Eşleşen âlim bulunamadı."
                 : "Aramak için yazmaya başlayın."}
             </CommandEmpty>
             {results.map((person) => (

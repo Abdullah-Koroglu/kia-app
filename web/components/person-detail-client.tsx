@@ -129,7 +129,7 @@ export function PersonDetailClient({ personId }: { personId: string }) {
       setReviews(reviewData.items);
       setMessage("");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Kişi yüklenemedi.");
+      setMessage(error instanceof Error ? error.message : "Âlim yüklenemedi.");
     } finally {
       setLoading(false);
     }
@@ -217,8 +217,8 @@ export function PersonDetailClient({ personId }: { personId: string }) {
       <Card>
         <CardContent className="p-12 text-center text-sm text-muted-foreground">
           {loading
-            ? "Kişi bilgileri yükleniyor…"
-            : message || "Kişi bulunamadı."}
+            ? "Âlim bilgileri yükleniyor…"
+            : message || "Âlim bulunamadı."}
         </CardContent>
       </Card>
     );
@@ -229,7 +229,7 @@ export function PersonDetailClient({ personId }: { personId: string }) {
       <Button asChild variant="ghost" className="mb-5">
         <Link href="/persons">
           <ArrowLeft />
-          Kişilere dön
+          Âlimlere dön
         </Link>
       </Button>
 
@@ -252,7 +252,7 @@ export function PersonDetailClient({ personId }: { personId: string }) {
 
       <RelationSection
         title="Hocaları"
-        emptyText="Bu kişinin kayıtlı hocası bulunmuyor."
+        emptyText="Bu âlimin kayıtlı hocası bulunmuyor."
         relations={detail.teachers}
         onAdd={() => openCreate("teacher")}
         onEdit={(relation) => openEdit(relation, "teacher")}
@@ -280,7 +280,7 @@ export function PersonDetailClient({ personId }: { personId: string }) {
           {detail.capabilities.canEdit || detail.capabilities.canChangeExternalId ? <CardAction>
             <Button variant="outline" onClick={() => setPersonFormOpen(true)}>
               <Pencil />
-              Kişiyi Düzenle
+              Âlimi Düzenle
             </Button>
           </CardAction> : null}
         </CardHeader>
@@ -312,7 +312,7 @@ export function PersonDetailClient({ personId }: { personId: string }) {
 
       <RelationSection
         title="Talebeleri"
-        emptyText="Bu kişinin kayıtlı talebesi bulunmuyor."
+        emptyText="Bu âlimin kayıtlı talebesi bulunmuyor."
         relations={detail.students}
         onAdd={() => openCreate("student")}
         onEdit={(relation) => openEdit(relation, "student")}
@@ -347,7 +347,7 @@ export function PersonDetailClient({ personId }: { personId: string }) {
         title="İlişkiyi silmek istiyor musunuz?"
         description={
           deletingRelation
-            ? `${detail.person.name} ile ${deletingRelation.counterpartName} arasındaki seçili ilişki silinecek. Kişi kayıtları korunacak.`
+            ? `${detail.person.name} ile ${deletingRelation.counterpartName} arasındaki seçili ilişki silinecek. Âlim kayıtları korunacak.`
             : ""
         }
         onConfirm={() => void removeRelation()}

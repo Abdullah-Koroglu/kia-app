@@ -44,7 +44,7 @@ export async function GET(request: Request, route: RouteContext) {
 
   const person = await getPerson(id);
   if (!person) {
-    return Response.json({ error: "Kişi bulunamadı." }, { status: 404 });
+    return Response.json({ error: "Âlim bulunamadı." }, { status: 404 });
   }
 
   const filter = sql`
@@ -267,7 +267,7 @@ export async function PATCH(request: Request, route: RouteContext) {
     });
 
     if (!updated) {
-      return Response.json({ error: "Kişi bulunamadı." }, { status: 404 });
+      return Response.json({ error: "Âlim bulunamadı." }, { status: 404 });
     }
     return Response.json(updated);
   } catch (error) {
@@ -313,7 +313,7 @@ export async function DELETE(request: Request, route: RouteContext) {
     });
 
     if (!deleted) {
-      return Response.json({ error: "Kişi bulunamadı." }, { status: 404 });
+      return Response.json({ error: "Âlim bulunamadı." }, { status: 404 });
     }
     return new Response(null, { status: 204 });
   } catch (error) {

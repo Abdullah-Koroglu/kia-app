@@ -147,7 +147,7 @@ export function PersonsClient() {
       setDeleting(null);
       await load();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Kişi silinemedi.");
+      setMessage(error instanceof Error ? error.message : "Âlim silinemedi.");
       setDeleting(null);
     } finally {
       setDeleteBusy(false);
@@ -189,10 +189,10 @@ export function PersonsClient() {
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Kişiler
+            Âlimler
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {data.total.toLocaleString("tr-TR")} kişi kaydı
+            {data.total.toLocaleString("tr-TR")} âlim kaydı
           </p>
         </div>
         {data.capabilities.canCreate ? <Button
@@ -202,7 +202,7 @@ export function PersonsClient() {
           }}
         >
           <Plus className="size-4" />
-          Yeni Kişi
+          Yeni Âlim
         </Button> : null}
       </div>
 
@@ -397,15 +397,15 @@ export function PersonsClient() {
         </Table>
         {loading ? (
           <div className="p-12 text-center text-sm text-muted-foreground">
-            Kişiler yükleniyor…
+            Âlimler yükleniyor…
           </div>
         ) : !data.items.length ? (
           <div className="p-12 text-center">
             <Users className="mx-auto mb-3 size-8 text-muted-foreground/50" />
             <p className="font-medium text-muted-foreground">
               {query || hasFilters
-                ? "Aramanızla eşleşen kişi bulunamadı."
-                : "Henüz kişi bulunmuyor."}
+                ? "Aramanızla eşleşen âlim bulunamadı."
+                : "Henüz âlim bulunmuyor."}
             </p>
           </div>
         ) : null}
@@ -448,10 +448,10 @@ export function PersonsClient() {
       <ConfirmDialog
         open={Boolean(deleting)}
         onOpenChange={(open) => !open && setDeleting(null)}
-        title="Kişiyi silmek istiyor musunuz?"
+        title="Âlimi silmek istiyor musunuz?"
         description={
           deleting
-            ? `${deleting.name} kaydı kalıcı olarak silinecek. İlişkisi bulunan kişiler silinemez.`
+            ? `${deleting.name} kaydı kalıcı olarak silinecek. İlişkisi bulunan âlimler silinemez.`
             : ""
         }
         onConfirm={() => void removePerson()}

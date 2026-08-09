@@ -134,7 +134,7 @@ export function RelationDialog({
                   value={counterpart}
                   onChange={setCounterpart}
                   excludeId={currentPerson.id}
-                  placeholder={`${roleLabel} olacak kişiyi ara`}
+                  placeholder={`${roleLabel} olacak âlimi ara`}
                 />
                 {!relation ? (
                   <Button
@@ -145,7 +145,7 @@ export function RelationDialog({
                     onClick={() => setQuickPersonOpen(true)}
                   >
                     <Plus className="size-4" />
-                    Aradığınız kişi yoksa yeni kişi oluşturun
+                    Aradığınız âlim yoksa yeni âlim oluşturun
                   </Button>
                 ) : null}
               </div>
