@@ -57,6 +57,20 @@
       "when": 1786053616598,
       "tag": "0007_manager_places",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786264005689,
+      "tag": "0008_unify_homelands_and_flexible_dates",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786264056733,
+      "tag": "0009_schema_homeland_places_dates",
+      "breakpoints": true
     }
   ]
 }

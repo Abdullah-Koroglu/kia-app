@@ -254,23 +254,6 @@ export const places = pgTable(
   (table) => [uniqueIndex("places_name_uq").on(table.name)],
 );
 
-export const homelands = pgTable(
-  "homelands",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    name: varchar("name", { length: 160 }).notNull(),
-    normalizedName: varchar("normalized_name", { length: 180 }).notNull(),
-    createdByUserId: uuid("created_by_user_id").references(() => users.id, {
-      onDelete: "set null",
-    }),
-    ...timestamps,
-  },
-  (table) => [
-    uniqueIndex("homelands_normalized_name_uq").on(table.normalizedName),
-    index("homelands_name_idx").on(table.name),
-  ],
-);
-
 export const personReviewStatusEnum = pgEnum("person_review_status", [
   "NOT_READY",
   "READY_FOR_REVIEW",
@@ -293,12 +276,12 @@ export const persons = pgTable(
     extSourceId: integer("ext_source_id").notNull(),
     name: varchar("name", { length: 180 }).notNull(),
     nameDescription: text("name_description"),
-    birthYearHijri: integer("birth_year_hijri"),
-    birthYearGregorian: integer("birth_year_gregorian"),
-    deathYearHijri: integer("death_year_hijri"),
-    deathYearGregorian: integer("death_year_gregorian"),
+    birthYearHijri: varchar("birth_year_hijri", { length: 40 }),
+    birthYearGregorian: varchar("birth_year_gregorian", { length: 40 }),
+    deathYearHijri: varchar("death_year_hijri", { length: 40 }),
+    deathYearGregorian: varchar("death_year_gregorian", { length: 40 }),
     detailNote: text("detail_note"),
-    homelandId: uuid("homeland_id").references(() => homelands.id, {
+    homelandId: integer("homeland_id").references(() => places.id, {
       onDelete: "set null",
     }),
     createdByUserId: uuid("created_by_user_id").references(() => users.id, {
@@ -339,14 +322,6 @@ export const persons = pgTable(
     ),
     index("persons_created_under_assignment_idx").on(
       table.createdUnderAssignmentId,
-    ),
-    check(
-      "persons_hijri_year_order_ck",
-      sql`${table.birthYearHijri} is null or ${table.deathYearHijri} is null or ${table.deathYearHijri} >= ${table.birthYearHijri}`,
-    ),
-    check(
-      "persons_gregorian_year_order_ck",
-      sql`${table.birthYearGregorian} is null or ${table.deathYearGregorian} is null or ${table.deathYearGregorian} >= ${table.birthYearGregorian}`,
     ),
   ],
 );

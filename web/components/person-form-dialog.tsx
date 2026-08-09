@@ -58,12 +58,12 @@ function draftFromPerson(person?: Person | null): PersonDraft {
     deathYearHijri: person.deathYearHijri?.toString() ?? "",
     deathYearGregorian: person.deathYearGregorian?.toString() ?? "",
     detailNote: person.detailNote ?? "",
-    homelandId: person.homelandId ?? "",
+    homelandId: person.homelandId ? String(person.homelandId) : "",
   };
 }
 
-function optionalNumber(value: string) {
-  return value.trim() ? Number(value) : null;
+function optionalText(value: string) {
+  return value.trim() || null;
 }
 
 export function PersonFormDialog({
@@ -86,7 +86,7 @@ export function PersonFormDialog({
   const [draft, setDraft] = useState<PersonDraft>(emptyDraft);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [homelands, setHomelands] = useState<{ id: string; name: string }[]>([]);
+  const [places, setPlaces] = useState<{ id: number; name: string }[]>([]);
   const [newHomeland, setNewHomeland] = useState("");
 
   useEffect(() => {
@@ -94,9 +94,9 @@ export function PersonFormDialog({
       setDraft(draftFromPerson(person));
       setError("");
       setNewHomeland("");
-      void api<{ items: { id: string; name: string }[] }>("/api/homelands")
-        .then((data) => setHomelands(data.items))
-        .catch(() => setHomelands([]));
+      void api<{ items: { id: number; name: string }[] }>("/api/places")
+        .then((data) => setPlaces(data.items))
+        .catch(() => setPlaces([]));
     }
   }, [open, person]);
 
@@ -113,12 +113,12 @@ export function PersonFormDialog({
         extSourceId: Number(draft.extSourceId),
         name: draft.name,
         nameDescription: draft.nameDescription || null,
-        birthYearHijri: optionalNumber(draft.birthYearHijri),
-        birthYearGregorian: optionalNumber(draft.birthYearGregorian),
-        deathYearHijri: optionalNumber(draft.deathYearHijri),
-        deathYearGregorian: optionalNumber(draft.deathYearGregorian),
+        birthYearHijri: optionalText(draft.birthYearHijri),
+        birthYearGregorian: optionalText(draft.birthYearGregorian),
+        deathYearHijri: optionalText(draft.deathYearHijri),
+        deathYearGregorian: optionalText(draft.deathYearGregorian),
         detailNote: draft.detailNote || null,
-        homelandId: draft.homelandId || null,
+        homelandId: draft.homelandId ? Number(draft.homelandId) : null,
       };
       const saved = await api<Person>(
         person ? `/api/persons/${person.id}` : "/api/persons",
@@ -141,12 +141,12 @@ export function PersonFormDialog({
     setBusy(true);
     setError("");
     try {
-      const created = await api<{ id: string; name: string }>("/api/homelands", {
+      const created = await api<{ id: number; name: string }>("/api/places", {
         method: "POST",
         body: JSON.stringify({ name: newHomeland }),
       });
-      setHomelands((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name, "tr")));
-      set("homelandId", created.id);
+      setPlaces((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name, "tr")));
+      set("homelandId", String(created.id));
       setNewHomeland("");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Memleket oluşturulamadı.");
@@ -229,6 +229,9 @@ export function PersonFormDialog({
               onChange={(value) => set("deathYearGregorian", value)}
               disabled={Boolean(person) && !canEditDetails}
             />
+            <p className="-mt-2 text-xs text-muted-foreground sm:col-span-2">
+              Kesin yıl veya tarih ifadesi girebilirsiniz: 1000, 1000-1001, yaklaşık 1000.
+            </p>
             <div className="grid gap-2 sm:col-span-2">
               <Label>Memleket</Label>
               <Select
@@ -239,7 +242,7 @@ export function PersonFormDialog({
                 <SelectTrigger className="w-full"><SelectValue placeholder="Bilinmiyor" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Bilinmiyor</SelectItem>
-                  {homelands.map((homeland) => <SelectItem value={homeland.id} key={homeland.id}>{homeland.name}</SelectItem>)}
+                  {places.map((place) => <SelectItem value={String(place.id)} key={place.id}>{place.name}</SelectItem>)}
                 </SelectContent>
               </Select>
               {!person || canEditDetails ? (
@@ -304,8 +307,10 @@ function YearField({
       <Label htmlFor={id}>{label}</Label>
       <Input
         id={id}
-        type="number"
-        step="1"
+        type="text"
+        inputMode="text"
+        maxLength={40}
+        placeholder="Örn. 1000-1001"
         disabled={disabled}
         value={value}
         onChange={(event) => onChange(event.target.value)}

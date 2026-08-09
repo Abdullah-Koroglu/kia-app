@@ -3,7 +3,7 @@ import test from "node:test";
 import { hasPermission, PERMISSIONS } from "../lib/permissions";
 
 test("hasPermission yalnızca verilen permission için true döner", () => {
-  const permissions = [PERMISSIONS.PERSON_VIEW, PERMISSIONS.HOMELAND_CREATE];
+  const permissions = [PERMISSIONS.PERSON_VIEW, PERMISSIONS.PLACE_CREATE];
   assert.equal(hasPermission(permissions, PERMISSIONS.PERSON_VIEW), true);
   assert.equal(hasPermission(permissions, PERMISSIONS.PERSON_DELETE), false);
 });

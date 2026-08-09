@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function yearLabel(hijri: number | null, gregorian: number | null) {
+export function yearLabel(hijri: string | null, gregorian: string | null) {
   if (!hijri && !gregorian) return "—";
   return [hijri ? `${hijri} H` : null, gregorian ? `${gregorian} M` : null]
     .filter(Boolean)

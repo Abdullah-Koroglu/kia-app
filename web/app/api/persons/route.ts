@@ -18,8 +18,8 @@ export async function GET(request: Request) {
   const normalizedQuery = normalizeSearchText(q);
   const teacherId = params.get("teacherId");
   const studentId = params.get("studentId");
-  const birthYear = Number(params.get("birthYear")) || null;
-  const deathYear = Number(params.get("deathYear")) || null;
+  const birthYear = params.get("birthYear")?.trim() || null;
+  const deathYear = params.get("deathYear")?.trim() || null;
   const compact = params.get("compact") === "true";
   const isManager = auth.user.roles.includes(ROLE_CODES.MANAGER);
   const requestedPage = Math.max(1, Number(params.get("page")) || 1);
@@ -55,10 +55,10 @@ export async function GET(request: Request) {
       )`
     : sql``;
   const birthCondition = birthYear
-    ? sql`and (p.birth_year_hijri = ${birthYear} or p.birth_year_gregorian = ${birthYear})`
+    ? sql`and (p.birth_year_hijri ilike '%' || ${birthYear} || '%' or p.birth_year_gregorian ilike '%' || ${birthYear} || '%')`
     : sql``;
   const deathCondition = deathYear
-    ? sql`and (p.death_year_hijri = ${deathYear} or p.death_year_gregorian = ${deathYear})`
+    ? sql`and (p.death_year_hijri ilike '%' || ${deathYear} || '%' or p.death_year_gregorian ilike '%' || ${deathYear} || '%')`
     : sql``;
 
   const where = sql`
@@ -83,7 +83,7 @@ export async function GET(request: Request) {
         p.death_year_gregorian as "deathYearGregorian",
         p.detail_note as "detailNote"
         ,p.homeland_id as "homelandId"
-        ,(select h.name from homelands h where h.id = p.homeland_id) as "homelandName"
+        ,(select pl.name from places pl where pl.id = p.homeland_id) as "homelandName"
         ,p.review_status as "reviewStatus"
         ,p.content_version as "contentVersion"
         ,p.approved_version as "approvedVersion"

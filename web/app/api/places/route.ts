@@ -1,23 +1,28 @@
 import { sql } from "@/db";
-import { requireApiPermission } from "@/lib/api-auth";
+import { requireApiUser } from "@/lib/api-auth";
 import { writeAudit } from "@/lib/audit";
-import { PERMISSIONS } from "@/lib/permissions";
 import { requestContext } from "@/lib/request-context";
 import { apiError, placeInputSchema } from "@/lib/validation";
 
 export async function GET() {
-  const auth = await requireApiPermission(PERMISSIONS.PLACE_VIEW);
+  const auth = await requireApiUser();
   if (auth.response) return auth.response;
   const items = await sql`
-    select p.id, p.name, count(r.id)::int as "usageCount"
-    from places p left join relations r on r.place_id = p.id
-    group by p.id order by p.name
+    select
+      p.id,
+      p.name,
+      (
+        (select count(*) from relations r where r.place_id = p.id) +
+        (select count(*) from persons pe where pe.homeland_id = p.id)
+      )::int as "usageCount"
+    from places p
+    order by p.name
   `;
   return Response.json({ items });
 }
 
 export async function POST(request: Request) {
-  const auth = await requireApiPermission(PERMISSIONS.PLACE_CREATE);
+  const auth = await requireApiUser();
   if (auth.response || !auth.user) return auth.response;
   try {
     const input = placeInputSchema.parse(await request.json());

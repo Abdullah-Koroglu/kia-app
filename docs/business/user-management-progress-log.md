@@ -50,8 +50,9 @@ Tamamlandı
 - Aynı araştırmacıya birden fazla çakışmayan görev verilebilir.
 - Aktif veya gecikmiş görev kapsamları çakışamaz.
 - Âlim silme ve dış kaynak ID değiştirme yalnızca yöneticidedir.
-- Yönetici rolü tek başına araştırmacı veri girişi sağlamaz.
+- Yönetici kontrol işlemleri hariç veri girişi dahil bütün işlemleri yapabilir.
 - Âlim başına en fazla bir opsiyonel memleket bulunur.
+- Memleketler ilişki mekânlarıyla aynı `places` tablosundan seçilir.
 - Her aktif kullanıcı memleket oluşturabilir.
 - Kontrolcü âlimi onaylayabilir veya zorunlu düzeltme yorumu bırakabilir.
 - Âlim sayfasında geçerli onayın kontrolcüsü ve tarihi gösterilir.
@@ -60,6 +61,35 @@ Tamamlandı
   `16-20` olur.
 
 ## İlerleme kayıtları
+
+### 2026-08-09 - Ortak mekân sözlüğü ve esnek tarih ifadeleri
+
+**Yapılanlar**
+
+- Ayrı `homelands` tablosu kaldırıldı; kişi memleketi `places` tablosuna bağlandı.
+- Mevcut memleket kayıtlarını ve kişi bağlantılarını kayıpsız taşıyan migration
+  eklendi.
+- Kişi formu memleket seçeneklerini `/api/places` üzerinden getiriyor; listede
+  olmayan mekân form içinde oluşturulup otomatik seçiliyor.
+- Mekân kullanım sayısı hem ilişkileri hem kişi memleketlerini kapsıyor; kullanımda
+  olan kayıtlar silinemiyor.
+- Dört doğum/vefat alanı `1000`, `1000-1001`, `yaklaşık 1000` gibi 40 karaktere
+  kadar tarih ifadelerini kabul edecek biçimde güncellendi.
+- Tarih filtreleri, aralık/ifade içindeki yıl metnini de bulacak şekilde uyarlandı.
+
+**Doğrulama**
+
+- `npm test`: 13/13 test başarılı.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı; eski `/api/homelands` route'u kaldırıldı.
+- İzole PostgreSQL 16 üzerinde eski memleket ve sayısal tarih içeren örnek veri
+  migrationdan geçirildi; place bağlantısı ve tarih değerleri korunarak doğrulandı.
+- Geçici doğrulama container'ı kaldırıldı.
+
+**Commit ve push**
+
+- Planlanan commit başlığı: `feat: unify homelands with places and support date ranges`
+- Push hedefi: `origin/master`
 
 ### 2026-08-07 - Yönetici kapsamı ve mekân yönetimi tamamlandı
 

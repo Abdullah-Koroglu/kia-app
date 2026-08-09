@@ -3,12 +3,12 @@ export type Person = {
   extSourceId: number;
   name: string;
   nameDescription: string | null;
-  birthYearHijri: number | null;
-  birthYearGregorian: number | null;
-  deathYearHijri: number | null;
-  deathYearGregorian: number | null;
+  birthYearHijri: string | null;
+  birthYearGregorian: string | null;
+  deathYearHijri: string | null;
+  deathYearGregorian: string | null;
   detailNote: string | null;
-  homelandId?: string | null;
+  homelandId?: number | null;
   homelandName?: string | null;
   reviewStatus?: "NOT_READY" | "READY_FOR_REVIEW" | "CHANGES_REQUESTED" | "APPROVED";
   contentVersion?: number;

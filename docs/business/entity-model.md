@@ -29,10 +29,11 @@ Kıraat ağındaki kişiyi temsil eder.
 | `extSourceId` | Evet | Çalışılan dış kaynaktaki integer kişi ID'si |
 | `name` | Evet | Ağda ve listelerde gösterilecek kısa kişi adı |
 | `nameDescription` | Hayır | Tam isim, künye, nisbe, lakap veya ayırt edici isim açıklaması |
-| `birthYearHijri` | Hayır | Hicrî doğum yılı |
-| `birthYearGregorian` | Hayır | Miladî doğum yılı |
-| `deathYearHijri` | Hayır | Hicrî vefat yılı |
-| `deathYearGregorian` | Hayır | Miladî vefat yılı |
+| `birthYearHijri` | Hayır | Hicrî doğum yılı veya tarih ifadesi |
+| `birthYearGregorian` | Hayır | Miladî doğum yılı veya tarih ifadesi |
+| `deathYearHijri` | Hayır | Hicrî vefat yılı veya tarih ifadesi |
+| `deathYearGregorian` | Hayır | Miladî vefat yılı veya tarih ifadesi |
+| `homelandId` | Hayır | Memleket olarak seçilen `Place.id` |
 | `detailNote` | Hayır | Kişi hakkında serbest ve ayrıntılı açıklama |
 | `createdAt` | Sistem | Kaydın oluşturulma zamanı |
 | `updatedAt` | Sistem | Kaydın son güncellenme zamanı |
@@ -48,8 +49,10 @@ Kıraat ağındaki kişiyi temsil eder.
 - `name` kısa gösterim adıdır. Örnek: `Âsım`.
 - `nameDescription` ayrıntılı isim bilgisidir. Örnek:
   `Âsım b. Ebî'n-Necûd, Ebû Bekir, el-Kûfî`.
-- Doğum ve vefat yılları bilinmiyorsa boş bırakılabilir.
-- Aynı takvimde doğum yılı girilmişse vefat yılı doğum yılından küçük olamaz.
+- Doğum ve vefat bilgileri bilinmiyorsa boş bırakılabilir.
+- Tarih alanları `1000`, `1000-1001` veya `yaklaşık 1000` gibi ifadeleri kabul eder.
+- Memleket, ilişki mekânlarıyla aynı `places` tablosundan seçilir ve kişi başına
+  en fazla bir tane olabilir.
 
 ## Relation
 
@@ -144,7 +147,8 @@ birden fazla farklı değerlendirme bulunduğunu ifade eder.
 
 ## Place
 
-İlişkinin gerçekleştiği mekânı temsil eden sade sözlük entity'sidir.
+İlişkinin gerçekleştiği mekânları ve kişilerin memleketlerini temsil eden ortak
+sözlük entity'sidir.
 
 | Alan | Zorunlu | Açıklama |
 |---|---:|---|
@@ -172,6 +176,7 @@ erDiagram
     SCOPE ||--o{ RELATION : "scopeId"
     CERTAINTY ||--o{ RELATION : "certaintyId"
     PLACE ||--o{ RELATION : "placeId"
+    PLACE ||--o{ PERSON : "homelandId"
 ```
 
 ## Faz 1 dışında bırakılan konular

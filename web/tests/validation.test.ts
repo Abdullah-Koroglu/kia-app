@@ -3,7 +3,6 @@ import test from "node:test";
 import {
   personInputSchema,
   assignmentInputSchema,
-  homelandInputSchema,
   changeRequestSchema,
   placeInputSchema,
   relationInputSchema,
@@ -21,12 +20,22 @@ test("geçerli kişi kaydını kabul eder", () => {
   assert.equal(result.success, true);
 });
 
-test("vefat yılı doğumdan küçük olamaz", () => {
+test("kişi tarih alanları yıl aralığı ve yaklaşık ifade kabul eder", () => {
   const result = personInputSchema.safeParse({
     extSourceId: 125,
     name: "Âsım",
-    birthYearHijri: 190,
-    deathYearHijri: 120,
+    birthYearHijri: "1000-1001",
+    deathYearHijri: "yaklaşık 1080",
+  });
+  assert.equal(result.success, true);
+});
+
+test("iki kesin yıl girildiğinde vefat doğumdan önce olamaz", () => {
+  const result = personInputSchema.safeParse({
+    extSourceId: 125,
+    name: "Âsım",
+    birthYearHijri: "190",
+    deathYearHijri: "120",
   });
   assert.equal(result.success, false);
 });
@@ -86,11 +95,6 @@ test("deadline başlangıçtan sonra olmalıdır", () => {
     scopes: [{ startExtSourceId: 1, endExtSourceId: 20 }],
   });
   assert.equal(result.success, false);
-});
-
-test("memleket adı boş bırakılamaz", () => {
-  assert.equal(homelandInputSchema.safeParse({ name: "  " }).success, false);
-  assert.equal(homelandInputSchema.safeParse({ name: "Kûfe" }).success, true);
 });
 
 test("düzeltme talebi yorum gerektirir", () => {

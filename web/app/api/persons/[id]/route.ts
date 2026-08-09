@@ -19,7 +19,7 @@ async function getPerson(id: string) {
       death_year_gregorian as "deathYearGregorian",
       detail_note as "detailNote",
       homeland_id as "homelandId",
-      (select h.name from homelands h where h.id = persons.homeland_id) as "homelandName",
+      (select pl.name from places pl where pl.id = persons.homeland_id) as "homelandName",
       review_status as "reviewStatus", content_version as "contentVersion",
       approved_version as "approvedVersion", approved_at as "approvedAt",
       (select coalesce(u.display_name, u.username) from users u where u.id = persons.approved_by_user_id) as "approvedByName",

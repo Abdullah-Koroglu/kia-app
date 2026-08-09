@@ -372,27 +372,15 @@ Görev `%100` veri girişinde otomatik kapanmaz. Tamamlanmaya hazır olması iç
 Yönetici görevi `COMPLETED` durumuna getirir. Deadline geçmiş ancak eksikleri
 bulunan görev `ACTIVE` kalır ve gecikmiş görünür.
 
-## 10. Memleket modeli
+## 10. Memleket ve mekân modeli
 
-Mevcut `places` tablosu ilişki mekânıdır ve memleket için kullanılmayacaktır.
+Memleket ayrı bir sözlük değildir. İlişki mekânları ve kişi memleketleri ortak
+`places` tablosundan seçilir. `persons.homelandId`, `places.id` alanına nullable
+foreign key'dir; bir âlimin sıfır veya bir memleketi olabilir.
 
 Mekânlar yöneticinin `/admin/places` ekranından oluşturulabilir, yeniden
-adlandırılabilir ve kullanılmıyorsa silinebilir. Bir ilişkide kullanılan mekân
-referans bütünlüğünü korumak için silinemez.
-
-### 10.1 `homelands`
-
-| Alan | Açıklama |
-|---|---|
-| `id` | UUID veya identity integer |
-| `name` | Gösterim adı |
-| `normalizedName` | Mükerrer kontrolü için normalize ad |
-| `createdByUserId` | Oluşturan kullanıcı |
-| `createdAt` | Oluşturulma zamanı |
-| `updatedAt` | Güncellenme zamanı |
-
-`persons.homelandId` nullable foreign key olarak eklenir. Bir âlimin sıfır
-veya bir memleketi olabilir.
+adlandırılabilir ve kullanılmıyorsa silinebilir. Bir ilişkide veya kişinin
+memleketinde kullanılan mekân referans bütünlüğünü korumak için silinemez.
 
 Kurallar:
 
@@ -557,11 +545,13 @@ GET    /api/researchers/progress
 GET    /api/me/assignments
 ```
 
-### 12.3 Memleket
+### 12.3 Memleket ve mekân
 
 ```text
-GET  /api/homelands?q=...
-POST /api/homelands
+GET  /api/places
+POST /api/places
+PATCH /api/places/[id]
+DELETE /api/places/[id]
 ```
 
 ### 12.4 Kontrol

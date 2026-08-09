@@ -1,9 +1,13 @@
 import { z } from "zod";
 
-const nullableYear = z
-  .union([z.number().int(), z.null()])
+const nullableYearExpression = z
+  .union([z.string().trim().min(1).max(40), z.number().int().transform(String), z.null()])
   .optional()
   .transform((value) => value ?? null);
+
+function exactYear(value: string | null) {
+  return value !== null && /^-?\d+$/.test(value) ? Number(value) : null;
+}
 
 const nullableText = z
   .union([z.string().trim().max(10_000), z.null()])
@@ -15,37 +19,38 @@ export const personInputSchema = z
     extSourceId: z.number().int(),
     name: z.string().trim().min(1).max(180),
     nameDescription: nullableText,
-    birthYearHijri: nullableYear,
-    birthYearGregorian: nullableYear,
-    deathYearHijri: nullableYear,
-    deathYearGregorian: nullableYear,
+    birthYearHijri: nullableYearExpression,
+    birthYearGregorian: nullableYearExpression,
+    deathYearHijri: nullableYearExpression,
+    deathYearGregorian: nullableYearExpression,
     detailNote: nullableText,
     homelandId: z
-      .union([z.string().uuid(), z.null()])
+      .union([z.number().int().positive(), z.null()])
       .optional()
       .transform((value) => value ?? null),
   })
   .superRefine((data, context) => {
-    if (
-      data.birthYearHijri !== null &&
-      data.deathYearHijri !== null &&
-      data.deathYearHijri < data.birthYearHijri
-    ) {
+    const birthHijri = exactYear(data.birthYearHijri);
+    const deathHijri = exactYear(data.deathYearHijri);
+    if (birthHijri !== null && deathHijri !== null && deathHijri < birthHijri) {
       context.addIssue({
         code: "custom",
         path: ["deathYearHijri"],
-        message: "Hicrî vefat yılı doğum yılından küçük olamaz.",
+        message: "Kesin Hicrî vefat yılı doğum yılından küçük olamaz.",
       });
     }
+
+    const birthGregorian = exactYear(data.birthYearGregorian);
+    const deathGregorian = exactYear(data.deathYearGregorian);
     if (
-      data.birthYearGregorian !== null &&
-      data.deathYearGregorian !== null &&
-      data.deathYearGregorian < data.birthYearGregorian
+      birthGregorian !== null &&
+      deathGregorian !== null &&
+      deathGregorian < birthGregorian
     ) {
       context.addIssue({
         code: "custom",
         path: ["deathYearGregorian"],
-        message: "Miladî vefat yılı doğum yılından küçük olamaz.",
+        message: "Kesin Miladî vefat yılı doğum yılından küçük olamaz.",
       });
     }
   });
@@ -148,10 +153,6 @@ export const assignmentInputSchema = z
       }
     }
   });
-
-export const homelandInputSchema = z.object({
-  name: z.string().trim().min(2).max(160),
-});
 
 export const placeInputSchema = z.object({
   name: z.string().trim().min(2).max(160),
