@@ -62,6 +62,33 @@ Tamamlandı
 
 ## İlerleme kayıtları
 
+### 2026-08-09 - Âlim listesi kontrol renkleri ve tablo etkileşimleri
+
+**Yapılanlar**
+
+- Âlim listesi satırları kontrol durumuna göre renklendirildi: hazırlanıyor gri,
+  kontrolde mavi, düzeltme bekliyor sarı ve onaylı yeşil.
+- Dış kaynak ID, isim, isim açıklaması, doğum, vefat, memleket ve kontrol
+  başlıklarına artan/azalan sunucu taraflı sıralama eklendi.
+- Sıralama kolonları güvenli sabit SQL ifadelerine eşlendi; istemci girdisi
+  doğrudan sorguya eklenmiyor.
+- Satırdaki düzenle/sil butonları üç nokta işlemler menüsünde toplandı; görüntüle
+  ve uygun kayıtlar için `Kontrole gönder` seçenekleri eklendi.
+- Yönetici, kontrol kararı vermeden âlimi kontrole gönderebilecek şekilde eksik
+  görev kapsamı istisnasına dahil edildi.
+- Ortak ve erişilebilir Radix tabanlı dropdown menü bileşeni eklendi.
+
+**Doğrulama**
+
+- `npm test`: 17/17 test başarılı.
+- `npm run lint`: başarılı.
+- `npm run build`: başarılı.
+
+**Commit ve push**
+
+- Planlanan commit başlığı: `feat: improve scholar list review workflow`
+- Push hedefi: `origin/master`
+
 ### 2026-08-09 - Sayısal tarih modeli ve ikinci Miladî yıl
 
 **Yapılanlar**

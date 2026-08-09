@@ -22,6 +22,7 @@ export type Person = {
     canEdit: boolean;
     canDelete: boolean;
     canChangeExternalId: boolean;
+    canSubmitReview: boolean;
   };
 };
 

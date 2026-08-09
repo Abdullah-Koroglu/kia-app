@@ -2,7 +2,7 @@ import { sql } from "@/db";
 import { requireApiPermission } from "@/lib/api-auth";
 import { findWritableAssignment } from "@/lib/assignments";
 import { writeAudit } from "@/lib/audit";
-import { PERMISSIONS } from "@/lib/permissions";
+import { PERMISSIONS, ROLE_CODES } from "@/lib/permissions";
 import { requestContext } from "@/lib/request-context";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -24,7 +24,8 @@ export async function POST(request: Request, route: RouteContext) {
     if (!['NOT_READY', 'CHANGES_REQUESTED'].includes(person.reviewStatus)) {
       return { error: "Bu âlim mevcut durumda kontrole gönderilemez.", status: 409 };
     }
-    if (!(await findWritableAssignment(transaction as unknown as typeof sql, auth.user.id, person.extSourceId))) {
+    const isManager = auth.user.roles.includes(ROLE_CODES.MANAGER);
+    if (!isManager && !(await findWritableAssignment(transaction as unknown as typeof sql, auth.user.id, person.extSourceId))) {
       return { error: "Âlim aktif görev kapsamınızda bulunmuyor.", status: 403 };
     }
     const action = person.reviewStatus === "CHANGES_REQUESTED" ? "RESUBMITTED" : "SUBMITTED";

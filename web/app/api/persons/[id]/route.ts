@@ -123,7 +123,7 @@ export async function GET(request: Request, route: RouteContext) {
         isManager ||
         (Boolean(writableAssignmentId) && person.reviewStatus !== "APPROVED"),
       canSubmitReview:
-        Boolean(writableAssignmentId) &&
+        (isManager || Boolean(writableAssignmentId)) &&
         (person.reviewStatus === "NOT_READY" ||
           person.reviewStatus === "CHANGES_REQUESTED"),
       canApprove: hasPermission(auth.user.permissions, PERMISSIONS.PERSON_APPROVE),

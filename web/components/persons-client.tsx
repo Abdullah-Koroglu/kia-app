@@ -2,11 +2,17 @@
 
 import Link from "next/link";
 import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   ChevronLeft,
   ChevronRight,
+  Eye,
+  MoreHorizontal,
   Pencil,
   Plus,
   Search,
+  Send,
   Trash2,
   Users,
   X,
@@ -25,6 +31,13 @@ import { ConfirmDialog } from "./ui/confirm-dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -32,6 +45,30 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
+
+type SortKey =
+  | "extSourceId"
+  | "name"
+  | "nameDescription"
+  | "birth"
+  | "death"
+  | "homeland"
+  | "reviewStatus";
+
+type SortOrder = "asc" | "desc";
+
+function reviewRowClass(status: Person["reviewStatus"]) {
+  if (status === "APPROVED") {
+    return "bg-emerald-50/70 hover:bg-emerald-100/70 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/35";
+  }
+  if (status === "READY_FOR_REVIEW") {
+    return "bg-sky-50/70 hover:bg-sky-100/70 dark:bg-sky-950/20 dark:hover:bg-sky-950/35";
+  }
+  if (status === "CHANGES_REQUESTED") {
+    return "bg-amber-50/80 hover:bg-amber-100/80 dark:bg-amber-950/20 dark:hover:bg-amber-950/35";
+  }
+  return "bg-slate-50/50 hover:bg-slate-100/70 dark:bg-slate-900/15 dark:hover:bg-slate-900/30";
+}
 
 export function PersonsClient() {
   const [data, setData] = useState<PersonPageResult>({
@@ -49,18 +86,23 @@ export function PersonsClient() {
   const [birthYear, setBirthYear] = useState("");
   const [deathYear, setDeathYear] = useState("");
   const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<SortKey>("extSourceId");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Person | null>(null);
   const [deleting, setDeleting] = useState<Person | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [reviewBusyId, setReviewBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setMessage("");
     const params = new URLSearchParams({
       page: String(page),
+      sortBy,
+      sortOrder,
     });
     if (query) params.set("q", query);
     if (teacher) params.set("teacherId", teacher.id);
@@ -75,7 +117,7 @@ export function PersonsClient() {
     } finally {
       setLoading(false);
     }
-  }, [page, query, teacher, student, birthYear, deathYear]);
+  }, [page, query, teacher, student, birthYear, deathYear, sortBy, sortOrder]);
 
   useEffect(() => {
     void load();
@@ -109,6 +151,34 @@ export function PersonsClient() {
       setDeleting(null);
     } finally {
       setDeleteBusy(false);
+    }
+  }
+
+  function changeSort(key: SortKey) {
+    setPage(1);
+    if (sortBy === key) {
+      setSortOrder((current) => (current === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortBy(key);
+    setSortOrder("asc");
+  }
+
+  async function submitForReview(person: Person) {
+    setReviewBusyId(person.id);
+    setMessage("");
+    try {
+      await api(`/api/persons/${person.id}/submit-review`, {
+        method: "POST",
+        body: "{}",
+      });
+      await load();
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Kontrole gönderilemedi.",
+      );
+    } finally {
+      setReviewBusyId(null);
     }
   }
 
@@ -219,19 +289,19 @@ export function PersonsClient() {
         <Table className="min-w-[920px]">
           <TableHeader>
             <TableRow>
-              <TableHead>Dış Kaynak ID</TableHead>
-              <TableHead>İsim</TableHead>
-              <TableHead>İsim Açıklaması</TableHead>
-              <TableHead>Doğum</TableHead>
-              <TableHead>Vefat</TableHead>
-              <TableHead>Memleket</TableHead>
-              <TableHead>Kontrol</TableHead>
-              <TableHead className="w-28 text-right">İşlemler</TableHead>
+              <SortableHead label="Dış Kaynak ID" sortKey="extSourceId" activeKey={sortBy} order={sortOrder} onSort={changeSort} />
+              <SortableHead label="İsim" sortKey="name" activeKey={sortBy} order={sortOrder} onSort={changeSort} />
+              <SortableHead label="İsim Açıklaması" sortKey="nameDescription" activeKey={sortBy} order={sortOrder} onSort={changeSort} />
+              <SortableHead label="Doğum" sortKey="birth" activeKey={sortBy} order={sortOrder} onSort={changeSort} />
+              <SortableHead label="Vefat" sortKey="death" activeKey={sortBy} order={sortOrder} onSort={changeSort} />
+              <SortableHead label="Memleket" sortKey="homeland" activeKey={sortBy} order={sortOrder} onSort={changeSort} />
+              <SortableHead label="Kontrol" sortKey="reviewStatus" activeKey={sortBy} order={sortOrder} onSort={changeSort} />
+              <TableHead className="w-16 text-right">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.items.map((person) => (
-              <TableRow key={person.id}>
+              <TableRow key={person.id} className={reviewRowClass(person.reviewStatus)}>
                 <TableCell className="font-mono text-xs text-muted-foreground">
                   #{person.extSourceId}
                 </TableCell>
@@ -270,26 +340,55 @@ export function PersonsClient() {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <div className="flex justify-end gap-1">
-                    {person.capabilities?.canEdit || person.capabilities?.canChangeExternalId ? <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`${person.name} kişisini düzenle`}
-                      onClick={() => {
-                        setEditing(person);
-                        setFormOpen(true);
-                      }}
-                    >
-                      <Pencil className="size-4" />
-                    </Button> : null}
-                    {person.capabilities?.canDelete ? <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`${person.name} kişisini sil`}
-                      onClick={() => setDeleting(person)}
-                    >
-                      <Trash2 className="text-destructive" />
-                    </Button> : null}
+                  <div className="flex justify-end">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`${person.name} işlemleri`}
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/persons/${person.id}`}>
+                            <Eye /> Görüntüle
+                          </Link>
+                        </DropdownMenuItem>
+                        {person.capabilities?.canEdit || person.capabilities?.canChangeExternalId ? (
+                          <DropdownMenuItem
+                            onSelect={() => {
+                              setEditing(person);
+                              setFormOpen(true);
+                            }}
+                          >
+                            <Pencil /> Düzenle
+                          </DropdownMenuItem>
+                        ) : null}
+                        {person.capabilities?.canSubmitReview ? (
+                          <DropdownMenuItem
+                            disabled={reviewBusyId === person.id}
+                            onSelect={() => void submitForReview(person)}
+                          >
+                            <Send />
+                            {reviewBusyId === person.id ? "Gönderiliyor…" : "Kontrole gönder"}
+                          </DropdownMenuItem>
+                        ) : null}
+                        {person.capabilities?.canDelete ? (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onSelect={() => setDeleting(person)}
+                            >
+                              <Trash2 /> Sil
+                            </DropdownMenuItem>
+                          </>
+                        ) : null}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </TableCell>
               </TableRow>
@@ -359,5 +458,34 @@ export function PersonsClient() {
         busy={deleteBusy}
       />
     </>
+  );
+}
+
+function SortableHead({
+  label,
+  sortKey,
+  activeKey,
+  order,
+  onSort,
+}: {
+  label: string;
+  sortKey: SortKey;
+  activeKey: SortKey;
+  order: SortOrder;
+  onSort: (key: SortKey) => void;
+}) {
+  const active = activeKey === sortKey;
+  const Icon = !active ? ArrowUpDown : order === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <TableHead aria-sort={active ? (order === "asc" ? "ascending" : "descending") : "none"}>
+      <button
+        type="button"
+        className="flex items-center gap-1.5 rounded-sm py-1 text-left hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        onClick={() => onSort(sortKey)}
+      >
+        {label}
+        <Icon className={active ? "size-3.5 text-primary" : "size-3.5 text-muted-foreground/60"} />
+      </button>
+    </TableHead>
   );
 }

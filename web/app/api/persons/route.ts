@@ -21,6 +21,8 @@ export async function GET(request: Request) {
   const birthYear = Number(params.get("birthYear")) || null;
   const deathYear = Number(params.get("deathYear")) || null;
   const compact = params.get("compact") === "true";
+  const sortBy = params.get("sortBy") ?? "extSourceId";
+  const sortDirection = params.get("sortOrder") === "desc" ? sql`desc` : sql`asc`;
   const isManager = auth.user.roles.includes(ROLE_CODES.MANAGER);
   const requestedPage = Math.max(1, Number(params.get("page")) || 1);
   const pageSize = compact ? 20 : PAGE_SIZE;
@@ -42,6 +44,21 @@ export async function GET(request: Request) {
     numericQuery !== null
       ? sql`case when p.ext_source_id = ${numericQuery} then 0 else 1 end`
       : sql`1`;
+  const sortExpressions: Record<string, ReturnType<typeof sql>> = {
+    extSourceId: sql`p.ext_source_id`,
+    name: sql`translate(unaccent(lower(p.name)), 'ı', 'i')`,
+    nameDescription: sql`translate(unaccent(lower(p.name_description)), 'ı', 'i')`,
+    birth: sql`coalesce(p.birth_year_gregorian, p.birth_year_hijri)`,
+    death: sql`coalesce(p.death_year_gregorian, p.death_year_hijri)`,
+    homeland: sql`(select translate(unaccent(lower(pl.name)), 'ı', 'i') from places pl where pl.id = p.homeland_id)`,
+    reviewStatus: sql`case p.review_status
+      when 'NOT_READY' then 1
+      when 'CHANGES_REQUESTED' then 2
+      when 'READY_FOR_REVIEW' then 3
+      when 'APPROVED' then 4
+      else 5 end`,
+  };
+  const sortExpression = sortExpressions[sortBy] ?? sortExpressions.extSourceId;
   const teacherCondition = teacherId
     ? sql`and exists (
         select 1 from relations r
@@ -103,10 +120,7 @@ export async function GET(request: Request) {
       ${where}
       order by
         ${exactOrder},
-        case when ${q} <> '' then greatest(
-          similarity(translate(unaccent(lower(p.name)), 'ı', 'i'), ${normalizedQuery}),
-          similarity(translate(unaccent(lower(coalesce(p.name_description, ''))), 'ı', 'i'), ${normalizedQuery})
-        ) else 0 end desc,
+        ${sortExpression} ${sortDirection} nulls last,
         p.ext_source_id asc
       limit ${pageSize} offset ${offset}
     `,
@@ -131,6 +145,14 @@ export async function GET(request: Request) {
         auth.user!.permissions,
         PERMISSIONS.PERSON_CHANGE_EXTERNAL_ID,
       ),
+      canSubmitReview:
+        (isManager || (hasPermission(
+          auth.user!.permissions,
+          PERMISSIONS.PERSON_UPDATE_IN_ASSIGNMENT,
+        ) && isExtSourceIdInRanges(item.extSourceId, writableRanges))) &&
+        ["NOT_READY", "CHANGES_REQUESTED"].includes(
+          String((item as Record<string, unknown>).reviewStatus),
+        ),
     },
   }));
 
