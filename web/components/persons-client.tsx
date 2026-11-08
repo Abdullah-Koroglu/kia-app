@@ -70,7 +70,13 @@ function reviewRowClass(status: Person["reviewStatus"]) {
   return "bg-slate-50/50 hover:bg-slate-100/70 dark:bg-slate-900/15 dark:hover:bg-slate-900/30";
 }
 
-export function PersonsClient() {
+export function PersonsClient({
+  initialHomelandId,
+  initialHomelandName,
+}: {
+  initialHomelandId?: number;
+  initialHomelandName?: string;
+}) {
   const [data, setData] = useState<PersonPageResult>({
     items: [],
     total: 0,
@@ -85,6 +91,10 @@ export function PersonsClient() {
   const [student, setStudent] = useState<Person | null>(null);
   const [birthYear, setBirthYear] = useState("");
   const [deathYear, setDeathYear] = useState("");
+  const [homelandId, setHomelandId] = useState(
+    initialHomelandId ? String(initialHomelandId) : "",
+  );
+  const [homelandName, setHomelandName] = useState(initialHomelandName ?? "");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortKey>("extSourceId");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
@@ -111,6 +121,7 @@ export function PersonsClient() {
     if (student) params.set("studentId", student.id);
     if (birthYear) params.set("birthYear", birthYear);
     if (deathYear) params.set("deathYear", deathYear);
+    if (homelandId) params.set("homelandId", homelandId);
 
     try {
       const result = await api<PersonPageResult>(`/api/persons?${params}`);
@@ -122,7 +133,7 @@ export function PersonsClient() {
     } finally {
       if (requestId === loadRequestId.current) setLoading(false);
     }
-  }, [page, query, teacher, student, birthYear, deathYear, sortBy, sortOrder]);
+  }, [page, query, teacher, student, birthYear, deathYear, homelandId, sortBy, sortOrder]);
 
   useEffect(() => {
     void load();
@@ -136,11 +147,19 @@ export function PersonsClient() {
     return () => clearTimeout(timer);
   }, [queryInput]);
 
+  useEffect(() => {
+    setHomelandId(initialHomelandId ? String(initialHomelandId) : "");
+    setHomelandName(initialHomelandName ?? "");
+    setPage(1);
+  }, [initialHomelandId, initialHomelandName]);
+
   function clearFilters() {
     setTeacher(null);
     setStudent(null);
     setBirthYear("");
     setDeathYear("");
+    setHomelandId("");
+    setHomelandName("");
     setPage(1);
   }
 
@@ -187,7 +206,7 @@ export function PersonsClient() {
     }
   }
 
-  const hasFilters = teacher || student || birthYear || deathYear;
+  const hasFilters = teacher || student || birthYear || deathYear || homelandId;
 
   return (
     <>
@@ -213,6 +232,26 @@ export function PersonsClient() {
 
       <Card className="mb-5">
         <CardContent>
+          {homelandId ? (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+              <span>
+                Memleket filtresi: <strong>{homelandName || `#${homelandId}`}</strong>
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setHomelandId("");
+                  setHomelandName("");
+                  setPage(1);
+                }}
+              >
+                <X className="size-4" />
+                Kaldır
+              </Button>
+            </div>
+          ) : null}
           <div className="grid gap-4 lg:grid-cols-[minmax(260px,1.5fr)_1fr_1fr_130px_130px_auto] lg:items-end">
             <div className="grid gap-2">
               <Label htmlFor="personSearch">Arama</Label>
@@ -338,7 +377,16 @@ export function PersonsClient() {
                     person.deathYearGregorianSecondary,
                   )}
                 </TableCell>
-                <TableCell>{person.homelandName || "—"}</TableCell>
+                <TableCell>
+                  {person.homelandId && person.homelandName ? (
+                    <Link
+                      className="font-medium text-primary hover:underline"
+                      href={`/persons?homelandId=${person.homelandId}&homelandName=${encodeURIComponent(person.homelandName)}`}
+                    >
+                      {person.homelandName}
+                    </Link>
+                  ) : "—"}
+                </TableCell>
                 <TableCell>
                   <Badge variant={person.reviewStatus === "APPROVED" ? "default" : "outline"}>
                     {person.reviewStatus === "APPROVED" ? "Onaylı" : person.reviewStatus === "READY_FOR_REVIEW" ? "Kontrolde" : person.reviewStatus === "CHANGES_REQUESTED" ? "Düzeltme" : "Hazırlanıyor"}

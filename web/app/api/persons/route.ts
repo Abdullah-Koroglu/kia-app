@@ -29,6 +29,11 @@ export async function GET(request: Request) {
   const studentId = params.get("studentId");
   const birthYear = Number(params.get("birthYear")) || null;
   const deathYear = Number(params.get("deathYear")) || null;
+  const requestedHomelandId = Number(params.get("homelandId"));
+  const homelandId =
+    Number.isSafeInteger(requestedHomelandId) && requestedHomelandId > 0
+      ? requestedHomelandId
+      : null;
   const compact = params.get("compact") === "true";
   const requestedSortBy = params.get("sortBy") ?? "extSourceId";
   const sortBy = SORT_KEYS.has(requestedSortBy) ? requestedSortBy : "extSourceId";
@@ -80,6 +85,9 @@ export async function GET(request: Request) {
         or p.death_year_gregorian_secondary = ${deathYear}
       )`
     : sql``;
+  const homelandCondition = homelandId
+    ? sql`and p.homeland_id = ${homelandId}`
+    : sql``;
   const assignmentVisibilityCondition = canViewAll
     ? sql``
     : sql`
@@ -104,6 +112,7 @@ export async function GET(request: Request) {
     ${studentCondition}
     ${birthCondition}
     ${deathCondition}
+    ${homelandCondition}
   `;
 
   const [rawItems, countRows, writableRanges] = await Promise.all([
