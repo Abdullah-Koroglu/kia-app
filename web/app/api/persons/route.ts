@@ -33,6 +33,10 @@ export async function GET(request: Request) {
   const requestedSortBy = params.get("sortBy") ?? "extSourceId";
   const sortBy = SORT_KEYS.has(requestedSortBy) ? requestedSortBy : "extSourceId";
   const sortOrder = params.get("sortOrder") === "desc" ? "desc" : "asc";
+  const canViewAll = hasPermission(
+    auth.user.permissions,
+    PERMISSIONS.PERSON_VIEW_ALL,
+  );
   const isManager = auth.user.roles.includes(ROLE_CODES.MANAGER);
   const requestedPage = Math.max(1, Number(params.get("page")) || 1);
   const pageSize = compact ? 20 : PAGE_SIZE;
@@ -76,9 +80,25 @@ export async function GET(request: Request) {
         or p.death_year_gregorian_secondary = ${deathYear}
       )`
     : sql``;
+  const assignmentVisibilityCondition = canViewAll
+    ? sql``
+    : sql`
+        and exists (
+          select 1
+          from research_assignments visible_assignment
+          join research_assignment_scopes visible_scope
+            on visible_scope.assignment_id = visible_assignment.id
+          where visible_assignment.researcher_user_id = ${auth.user.id}
+            and visible_assignment.status = 'ACTIVE'
+            and visible_assignment.starts_at <= now()
+            and p.ext_source_id between visible_scope.start_ext_source_id
+              and visible_scope.end_ext_source_id
+        )
+      `;
 
   const where = sql`
     where true
+    ${assignmentVisibilityCondition}
     ${searchCondition}
     ${teacherCondition}
     ${studentCondition}
